@@ -1,0 +1,99 @@
+CREATE TABLE Pacientes(
+	folio_p text PRIMARY KEY,
+	nom_p text,
+	edad_p int,
+	sexo_p text,
+	fecha_registro date,
+	estado_p boolean default true	
+);
+
+CREATE TABLE Laboratoristas(
+	cedula_lab text PRIMARY KEY,
+	fecha_nac_lab date,
+	sexo_lab text,
+	nom_lab text,
+	fecha_contratacion date,	
+	estado_lab boolean
+);
+
+CREATE TABLE Historial_clinico(
+	num_historial int PRIMARY KEY,
+	folio_p text REFERENCES Pacientes(folio_p),
+	status int,
+	cedula_lab text REFERENCES Laboratoristas(cedula_lab)	 
+);
+
+
+CREATE TABLE Materiales(
+	codi_barra_m int PRIMARY KEY,
+	nom_m text,
+	stock_m int
+);
+
+CREATE TABLE Atributos(
+	folio_atri int PRIMARY KEY,
+	nom_atri text,
+	descripcion_atri text,
+	min float,
+	max float
+);
+
+CREATE TABLE Reactivos(
+	codi_barra_r int PRIMARY KEY,
+	nom_r text,
+	stock_r float,
+	fecha_cad date
+);
+
+CREATE TABLE Inventario_materiales(
+	num_inv_m int PRIMARY KEY,	
+	fecha_inv_m date,
+	codi_barra_m int REFERENCES Materiales(codi_barra_m),
+	cedula_lab text REFERENCES Laboratoristas(cedula_lab)
+);
+
+CREATE TABLE Inventario_reactivos(
+	num_inv_r int PRIMARY KEY,	
+	fecha_inv_r date,
+	codi_barra_r int REFERENCES Reactivos(codi_barra_r),
+	cedula_lab text REFERENCES Laboratoristas(cedula_lab)
+);
+
+CREATE TABLE Analisis(
+	folio_a serial PRIMARY KEY,
+	nom_a text,
+	tiempo_realizacion int,
+	fecha_a date
+);
+
+CREATE TABLE Det_a_materiales(
+	folio_a int REFERENCES Analisis(folio_a),
+	cons_det_a_materiales int,
+	codi_barra_m int REFERENCES Materiales(codi_barra_m),
+	PRIMARY KEY(folio_a,cons_det_a_materiales)
+);
+
+CREATE TABLE Det_a_atributos(
+	folio_a int REFERENCES Analisis(folio_a),
+	cons_det_a_atributos int,
+	folio_atri int REFERENCES Atributos(folio_atri),
+	PRIMARY KEY(folio_a, cons_det_a_atributos)
+);
+
+CREATE TABLE Det_atributos(
+	folio_atri int REFERENCES Atributos(folio_atri),
+	cons_det_atributos int,
+	codi_barra_r int REFERENCES Reactivos(codi_barra_r),
+	PRIMARY KEY(folio_atri, cons_det_atributos)
+);
+
+CREATE TABLE Resultados(
+	num_historial int REFERENCES Historial_clinico(num_historial),
+	cons_resultados int,
+	resultado float,
+	folio_a int,
+	cons_det_a_atributos int,
+	FOREIGN KEY(folio_a, cons_det_a_atributos) REFERENCES Det_a_atributos(folio_a, cons_det_a_atributos),
+	folio_atri int REFERENCES Atributos(folio_atri),
+	PRIMARY KEY(num_historial, cons_resultados)	
+);
