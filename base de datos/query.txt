@@ -1,9 +1,10 @@
 CREATE TABLE Pacientes(
-	folio_p text PRIMARY KEY,
+	folio_p serial PRIMARY KEY,
 	nom_p text,
 	edad_p int,
 	sexo_p text,
 	fecha_registro date,
+	correo text,
 	estado_p boolean default true	
 );
 
@@ -13,7 +14,7 @@ CREATE TABLE Laboratoristas(
 	sexo_lab text,
 	nom_lab text,
 	fecha_contratacion date,	
-	estado_lab boolean
+	estado_lab boolean default true
 );
 
 CREATE TABLE Historial_clinico(

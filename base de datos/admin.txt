@@ -1,0 +1,8 @@
+create user usuario1 with password 'usuario1';
+create user usuario2 with password 'usuario2';
+
+create group administradores with user usuario1, usuario2;
+
+grant select, insert on table pacientes to administradores;
+grant usage on pacientes_folio_p_seq to administradores;
+grant select, insert on table laboratoristas to administradores;
