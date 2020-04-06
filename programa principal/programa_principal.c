@@ -5,20 +5,22 @@
 #define ANSI_COLOR_RESET   "\x1b[0m"
 
 void hacer_select();
-int menu_principal();
+int validar_entero();
 
-int menu_pacientes();
+char* menu_principal();
+
+char* menu_pacientes();
 void alta_pacientes();
 void actualizar_pacientes();
 void buscar_pacientes();
 
-int menu_laboratoristas();
+char* menu_laboratoristas();
 void alta_laboratoristas();
 void actualizar_laboratoristas();
 void buscar_laboratoristas();
 void despedir_laboratoristas();
 
-int menu_analisis();
+char* menu_analisis();
 void solicitar_analisis();
 void realizar_analisis();
 void entregar_analisis();
@@ -26,32 +28,54 @@ void buscar_analisis();
 void consultas_analisis();
 void agregar_nuevo_analisis();
 
-int menu_materiales();
+char* menu_materiales();
 void alta_materiales();
 void baja_materiales();
 
-int menu_reactivos();
+char* menu_reactivos();
 void alta_reactivos();
 void baja_reactivos();
 
-int menu_reportes();
+char* menu_reportes();
 PGconn *conn;
 PGresult *res;
 PGresult *resultado;
+
+int tamano_maloc=20;
 int main(int argc, char *argv[]){
+
     int opc, opc_paciente, opc_laboratorista, opc_analisis, opc_materiales,opc_reactivos, opc_reportes;
     conn = PQsetdbLogin("localhost","5432",NULL,NULL,"lac","usuario1","usuario1");
     if(PQstatus(conn) != CONNECTION_BAD){
         printf("La conexion a la base de datos ha sido correcta\n");
     }
     do{
-        opc=menu_principal();
+        //VALIDAR SI LA OPCION DEL MENU PRINCIPAL ES UN NUMERO
+        do{
+            char* cadena = malloc(tamano_maloc); //CREO UNA CADENA DE 20 CARACTERES   
+            if(opc==0 || opc==-1){system("clear");
+                printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET );  
+            }       
+            cadena=menu_principal();// cadena RECIBE EL VALOR QUE EL USUARIO DIGITE
+            opc=validar_entero(cadena);//INVOCO A METODO QUE SE REGRESA EL NUMERO O 0 SI NO ES UN NUMERO
+        }while(opc==0 || opc==-1);
+        // FIN VALIDAR....................................................................................................
+
         switch (opc)
         {
         case 1: system("clear");
             do{
-            opc_paciente=menu_pacientes(); 
-                switch (opc_paciente){
+                //VALIDAR SI LA OPCION DEL MENU PACIENTE ES UN NUMERO
+                do{
+                    char* cadena = malloc(tamano_maloc); //CREO UNA CADENA DE 20 CARACTERES   
+                    if(opc_paciente==0 || opc_paciente==-1){system("clear");
+                        printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET );  
+                    }       
+                    cadena=menu_pacientes();// cadena RECIBE EL VALOR QUE EL USUARIO DIGITE
+                    opc_paciente=validar_entero(cadena);//INVOCO A METODO QUE SE REGRESA EL NUMERO O 0 SI NO ES UN NUMERO
+                }while(opc_paciente==0 || opc_paciente==-1);
+                // FIN VALIDAR....................................................................................................
+               switch (opc_paciente){
                     case 1: system("clear"); alta_pacientes(); break;
                     case 2: system("clear"); actualizar_pacientes(); break;
                     case 3: system("clear"); buscar_pacientes(); break;
@@ -64,7 +88,16 @@ int main(int argc, char *argv[]){
 
         case 2: system("clear");
             do{
-            opc_laboratorista=menu_laboratoristas(); 
+                //VALIDAR SI LA OPCION DEL MENU PACIENTE ES UN NUMERO
+                do{
+                    char* cadena = malloc(tamano_maloc); //CREO UNA CADENA DE 20 CARACTERES   
+                    if(opc_laboratorista==0 || opc_laboratorista==-1){system("clear");
+                        printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET );  
+                    }       
+                    cadena=menu_laboratoristas();// cadena RECIBE EL VALOR QUE EL USUARIO DIGITE
+                    opc_laboratorista=validar_entero(cadena);//INVOCO A METODO QUE SE REGRESA EL NUMERO O 0 SI NO ES UN NUMERO
+                }while(opc_laboratorista==0 || opc_laboratorista==-1);
+                // FIN VALIDAR.................................................................................................... 
                 switch (opc_laboratorista){
                     case 1: system("clear"); alta_laboratoristas(); break;
                     case 2: system("clear"); actualizar_laboratoristas(); break;
@@ -78,7 +111,16 @@ int main(int argc, char *argv[]){
 
         case 3: system("clear"); 
             do{
-            opc_analisis=menu_analisis(); 
+                //VALIDAR SI LA OPCION DEL MENU PACIENTE ES UN NUMERO
+                do{
+                    char* cadena = malloc(tamano_maloc); //CREO UNA CADENA DE 20 CARACTERES   
+                    if(opc_analisis==0 || opc_analisis==-1){system("clear");
+                        printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET );  
+                    }       
+                    cadena=menu_analisis();// cadena RECIBE EL VALOR QUE EL USUARIO DIGITE
+                    opc_analisis=validar_entero(cadena);//INVOCO A METODO QUE SE REGRESA EL NUMERO O 0 SI NO ES UN NUMERO
+                }while(opc_analisis==0 || opc_analisis==-1);
+                // FIN VALIDAR....................................................................................................
                 switch (opc_analisis){
                     case 1: system("clear"); solicitar_analisis(); break;
                     case 2: system("clear"); realizar_analisis(); break;
@@ -94,7 +136,16 @@ int main(int argc, char *argv[]){
 
         case 4: system("clear"); 
         do{
-            opc_materiales=menu_materiales(); 
+            //VALIDAR SI LA OPCION DEL MENU PACIENTE ES UN NUMERO
+                do{
+                    char* cadena = malloc(tamano_maloc); //CREO UNA CADENA DE 20 CARACTERES   
+                    if(opc_materiales==0 || opc_materiales==-1){system("clear");
+                        printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET );  
+                    }       
+                    cadena=menu_materiales();// cadena RECIBE EL VALOR QUE EL USUARIO DIGITE
+                    opc_materiales=validar_entero(cadena);//INVOCO A METODO QUE SE REGRESA EL NUMERO O 0 SI NO ES UN NUMERO
+                }while(opc_materiales==0 || opc_materiales==-1);
+                // FIN VALIDAR.................................................................................................... 
                 switch (opc_materiales){
                     case 1: system("clear"); alta_materiales(); break;
                     case 2: system("clear"); baja_materiales(); break;
@@ -106,7 +157,16 @@ int main(int argc, char *argv[]){
 
         case 5: system("clear");
         do{
-            opc_reactivos=menu_reactivos(); 
+            //VALIDAR SI LA OPCION DEL MENU PACIENTE ES UN NUMERO
+                do{
+                    char* cadena = malloc(tamano_maloc); //CREO UNA CADENA DE 20 CARACTERES   
+                    if(opc_reactivos==0 || opc_reactivos==-1){system("clear");
+                        printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET );  
+                    }       
+                    cadena=menu_reactivos();// cadena RECIBE EL VALOR QUE EL USUARIO DIGITE
+                    opc_reactivos=validar_entero(cadena);//INVOCO A METODO QUE SE REGRESA EL NUMERO O 0 SI NO ES UN NUMERO
+                }while(opc_reactivos==0 || opc_reactivos==-1);
+                // FIN VALIDAR.................................................................................................... 
                 switch (opc_reactivos){
                     case 1: system("clear"); alta_reactivos(); break;
                     case 2: system("clear"); baja_reactivos(); break;
@@ -130,8 +190,19 @@ int main(int argc, char *argv[]){
     PQfinish(conn);
     return 0;
 }
-int menu_principal(){
-    int opc;
+int validar_entero(char sNum[tamano_maloc]){
+    int num;
+    if(sNum==0)
+        num=-1;
+    else{
+        num=atoi(sNum); /* atoi convierte el numero ingresado como cadena en entero
+        en caso de ser posible, de lo contrario retorna 0*/
+
+    }
+    return num;
+}
+char* menu_principal(){
+    char* opc = malloc(tamano_maloc);
     printf("|-------------------MENU PRINCIPAL-------------------|");
     printf("\n[1] PACIENTES");
     printf("\n[2] LABORATORISTAS");
@@ -142,13 +213,13 @@ int menu_principal(){
     printf("\n[7] SALIR");
     printf("\n----------------------------------------------------\n");
     printf("Ingrese la opcion deseada : ");
-    scanf("%d", &opc);
+    scanf("%s", opc);
     return opc;    
 }
 
 
-int menu_pacientes(){
- int opc;
+char* menu_pacientes(){
+    char* opc = malloc(tamano_maloc);
     printf("|------------------MENU PACIENTES------------------|");
     printf("\n[1] ALTA");
     printf("\n[2] ACTUALIZAR");
@@ -156,7 +227,7 @@ int menu_pacientes(){
     printf("\n[4] VOLVER AL MENU PRINCIPAL");
     printf("\n---------------------------------------------------\n");
     printf("Ingrese la opcion deseada : ");
-    scanf("%d", &opc);
+    scanf("%s", opc);
     return opc;    
 }
 void alta_pacientes(){ 
@@ -173,8 +244,8 @@ void buscar_pacientes(){
 }
 
 
-int menu_laboratoristas(){
-    int opc;
+char* menu_laboratoristas(){
+    char* opc = malloc(tamano_maloc);
     printf("|--------------MENU  LABORATORISTAS----------------|");
     printf("\n[1] ALTA");
     printf("\n[2] ACTUALIZAR");
@@ -183,7 +254,7 @@ int menu_laboratoristas(){
     printf("\n[5] VOLVER AL MENU PRINCIPAL");
     printf("\n---------------------------------------------------\n");
     printf("Ingrese la opcion deseada : ");
-    scanf("%d", &opc);
+    scanf("%s", opc);
     return opc;    
 }
 void alta_laboratoristas(){
@@ -204,8 +275,8 @@ void despedir_laboratoristas(){
 }
 
 
-int menu_analisis(){
-    int opc;
+char* menu_analisis(){
+    char* opc = malloc(tamano_maloc);
     printf("|-----------------MENU  ANALISIS-------------------|");
     printf("\n[1] SOLICITAR ANALISIS");
     printf("\n[2] REALIZAR ANALISIS");
@@ -216,7 +287,7 @@ int menu_analisis(){
     printf("\n[7] VOLVER AL MENU PRINCIPAL");
     printf("\n---------------------------------------------------\n");
     printf("Ingrese la opcion deseada : ");
-    scanf("%d", &opc);
+    scanf("%s", opc);
     return opc; 
 }
 void solicitar_analisis(){
@@ -246,15 +317,15 @@ void agregar_nuevo_analisis(){
 
 
 
-int menu_materiales(){
-    int opc;
+char* menu_materiales(){
+    char* opc = malloc(tamano_maloc);
     printf("|----------------MENU  MATERIALES------------------|");
     printf("\n[1] ALTA");
     printf("\n[2] BAJA");
     printf("\n[3] VOLVER AL MENU PRINCIPAL");
     printf("\n---------------------------------------------------\n");
     printf("Ingrese la opcion deseada : ");
-    scanf("%d", &opc);
+    scanf("%s", opc);
     return opc; 
 }
 void alta_materiales(){
@@ -267,15 +338,15 @@ void baja_materiales(){
 }
 
 
-int menu_reactivos(){
-    int opc;
+char* menu_reactivos(){
+    char* opc = malloc(tamano_maloc);
     printf("|-----------------MENU REACTIVOS-------------------|");
     printf("\n[1] ALTA");
     printf("\n[2] BAJA");
     printf("\n[3] VOLVER AL MENU PRINCIPAL");
     printf("\n---------------------------------------------------\n");
     printf("Ingrese la opcion deseada : ");
-    scanf("%d", &opc);
+    scanf("%s", opc);
     return opc; 
 }
 void alta_reactivos(){
@@ -288,7 +359,7 @@ void baja_reactivos(){
 }
 
 
-int menu_reportes(){system("clear");
+char* menu_reportes(){system("clear");
     printf("reportes\n");
     return 0;
 }
