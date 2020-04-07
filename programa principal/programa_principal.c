@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <postgresql/libpq-fe.h>
 #define ANSI_COLOR_RED     "\x1b[31m" // color rojo
 #define ANSI_COLOR_RESET   "\x1b[0m"  // resetear color
@@ -42,19 +43,25 @@ PGresult *res;
 PGresult *resultado;
 
 int tamano_maloc=20;
+
+    
 int main(int argc, char *argv[]){
+    //int var;
+    //var=validar_entero("1a");
+    //printf("var: %d\n",var);
+    
     int opc, opc_paciente, opc_laboratorista, opc_analisis, opc_materiales,opc_reactivos, opc_reportes;
 
     do{
         //VALIDAR SI LA OPCION DEL MENU PRINCIPAL ES UN NUMERO
         do{
             char* cadena = malloc(tamano_maloc); //CREO UNA CADENA DE 20 CARACTERES   
-            if(opc==0 || opc==-1){system("clear");
+            if(opc==-1){system("clear");
                 printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET );  
             }       
             cadena=menu_principal();// cadena RECIBE EL VALOR QUE EL USUARIO DIGITE
             opc=validar_entero(cadena);//INVOCO A METODO QUE SE REGRESA EL NUMERO O 0 SI NO ES UN NUMERO
-        }while(opc==0 || opc==-1);
+        }while(opc==-1);
         // FIN VALIDAR....................................................................................................
 
         switch (opc)
@@ -64,12 +71,12 @@ int main(int argc, char *argv[]){
                 //VALIDAR SI LA OPCION DEL MENU PACIENTE ES UN NUMERO
                 do{
                     char* cadena = malloc(tamano_maloc); //CREO UNA CADENA DE 20 CARACTERES   
-                    if(opc_paciente==0 || opc_paciente==-1){system("clear");
+                    if(opc_paciente==-1){system("clear");
                         printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET );  
                     }       
                     cadena=menu_pacientes();// cadena RECIBE EL VALOR QUE EL USUARIO DIGITE
                     opc_paciente=validar_entero(cadena);//INVOCO A METODO QUE SE REGRESA EL NUMERO O 0 SI NO ES UN NUMERO
-                }while(opc_paciente==0 || opc_paciente==-1);
+                }while(opc_paciente==-1);
                 // FIN VALIDAR....................................................................................................
                switch (opc_paciente){
                     case 1: system("clear"); alta_pacientes(); break;
@@ -87,12 +94,13 @@ int main(int argc, char *argv[]){
                 //VALIDAR SI LA OPCION DEL MENU PACIENTE ES UN NUMERO
                 do{
                     char* cadena = malloc(tamano_maloc); //CREO UNA CADENA DE 20 CARACTERES   
-                    if(opc_laboratorista==0 || opc_laboratorista==-1){system("clear");
+                    if(opc_laboratorista==-1){system("clear");
                         printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET );  
+                    
                     }       
                     cadena=menu_laboratoristas();// cadena RECIBE EL VALOR QUE EL USUARIO DIGITE
                     opc_laboratorista=validar_entero(cadena);//INVOCO A METODO QUE SE REGRESA EL NUMERO O 0 SI NO ES UN NUMERO
-                }while(opc_laboratorista==0 || opc_laboratorista==-1);
+                }while(opc_laboratorista==-1);
                 // FIN VALIDAR.................................................................................................... 
                 switch (opc_laboratorista){
                     case 1: system("clear"); alta_laboratoristas(); break;
@@ -110,12 +118,12 @@ int main(int argc, char *argv[]){
                 //VALIDAR SI LA OPCION DEL MENU PACIENTE ES UN NUMERO
                 do{
                     char* cadena = malloc(tamano_maloc); //CREO UNA CADENA DE 20 CARACTERES   
-                    if(opc_analisis==0 || opc_analisis==-1){system("clear");
+                    if(opc_analisis==-1){system("clear");
                         printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET );  
                     }       
                     cadena=menu_analisis();// cadena RECIBE EL VALOR QUE EL USUARIO DIGITE
                     opc_analisis=validar_entero(cadena);//INVOCO A METODO QUE SE REGRESA EL NUMERO O 0 SI NO ES UN NUMERO
-                }while(opc_analisis==0 || opc_analisis==-1);
+                }while(opc_analisis==-1);
                 // FIN VALIDAR....................................................................................................
                 switch (opc_analisis){
                     case 1: system("clear"); solicitar_analisis(); break;
@@ -135,12 +143,12 @@ int main(int argc, char *argv[]){
             //VALIDAR SI LA OPCION DEL MENU PACIENTE ES UN NUMERO
                 do{
                     char* cadena = malloc(tamano_maloc); //CREO UNA CADENA DE 20 CARACTERES   
-                    if(opc_materiales==0 || opc_materiales==-1){system("clear");
+                    if(opc_materiales==-1){system("clear");
                         printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET );  
                     }       
                     cadena=menu_materiales();// cadena RECIBE EL VALOR QUE EL USUARIO DIGITE
                     opc_materiales=validar_entero(cadena);//INVOCO A METODO QUE SE REGRESA EL NUMERO O 0 SI NO ES UN NUMERO
-                }while(opc_materiales==0 || opc_materiales==-1);
+                }while(opc_materiales==-1);
                 // FIN VALIDAR.................................................................................................... 
                 switch (opc_materiales){
                     case 1: system("clear"); alta_materiales(); break;
@@ -156,12 +164,12 @@ int main(int argc, char *argv[]){
             //VALIDAR SI LA OPCION DEL MENU PACIENTE ES UN NUMERO
                 do{
                     char* cadena = malloc(tamano_maloc); //CREO UNA CADENA DE 20 CARACTERES   
-                    if(opc_reactivos==0 || opc_reactivos==-1){system("clear");
+                    if(opc_reactivos==-1){system("clear");
                         printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET );  
                     }       
                     cadena=menu_reactivos();// cadena RECIBE EL VALOR QUE EL USUARIO DIGITE
                     opc_reactivos=validar_entero(cadena);//INVOCO A METODO QUE SE REGRESA EL NUMERO O 0 SI NO ES UN NUMERO
-                }while(opc_reactivos==0 || opc_reactivos==-1);
+                }while(opc_reactivos==-1);
                 // FIN VALIDAR.................................................................................................... 
                 switch (opc_reactivos){
                     case 1: system("clear"); alta_reactivos(); break;
@@ -186,14 +194,26 @@ int main(int argc, char *argv[]){
     //PQfinish(conn);
     return 0;
 }
-int validar_entero(char sNum[tamano_maloc]){
-    int num;
-    if(sNum==0)
-        num=-1;
-    else{
-        num=atoi(sNum); /* atoi convierte el numero ingresado como cadena en entero
-        en caso de ser posible, de lo contrario retorna 0*/
 
+int validar_entero(char cadena[tamano_maloc]){    
+    int z,valor=1, num;//Z ES UN CONTADOR, SI VALOR ES 0 SIGNIFICA QUE NO ES UN NUMERO, SI ES 1 SIGNIFICA QUE LA CADENA SI ES UN NUMERO
+    char x[10]={'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+    for (z=0; z<strlen(cadena);z++){//ESTE FOR RECORRE LA CADENA CARACTER POR CARACTER
+        if(cadena[z] == x[0] || cadena[z] == x[1] || cadena[z] == x[2] || cadena[z] == x[3] || cadena[z] == x[4] || cadena[z] == x[5] || cadena[z] == x[6] || cadena[z] == x[7] || cadena[z] == x[8] || cadena[z] == x[9]){//ESTE IF VALIDA QUE LO INGRESADO SEA UN DIGITO
+                valor = 1;//SI LA CONDICION SE CUMPLE, TOMA EL VALOR DE 1 LO QUE SIGNIFICA QUE EL CARACTER ANALIZADO SI ES UN NUMERO
+        }
+        else{
+            valor = 0; //SI LA CONDICION NO SE COMPLE, TOMA EL VALOR DE 0, ES DECIR, EL CARACTER ANALIZADO NO ES UN NUMERO  
+        } 
+        if(valor==0){//SI ALGUN CARACTER NO ES UN NUMERO SALE DEL FOR
+            break;
+        }
+    }
+    if(valor==1){//SI LA CADENA SI ES UN NUMERO CONVIERTE LA CADENA A ENTERO Y LO DEVUELVE
+        num = atoi(cadena);
+    }
+    else{//SI LA CADENA NO ES UN NUMERO DEVUELVE -1
+        num = -1;
     }
     return num;
 }
