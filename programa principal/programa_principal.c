@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <postgresql/libpq-fe.h>
-#define ANSI_COLOR_RED     "\x1b[31m"
-#define ANSI_COLOR_RESET   "\x1b[0m"
+#define ANSI_COLOR_RED     "\x1b[31m" // color rojo
+#define ANSI_COLOR_RESET   "\x1b[0m"  // resetear color
 
 void hacer_select();
 int validar_entero();
@@ -43,12 +43,8 @@ PGresult *resultado;
 
 int tamano_maloc=20;
 int main(int argc, char *argv[]){
-
     int opc, opc_paciente, opc_laboratorista, opc_analisis, opc_materiales,opc_reactivos, opc_reportes;
-    conn = PQsetdbLogin("localhost","5432",NULL,NULL,"lac","usuario1","usuario1");
-    if(PQstatus(conn) != CONNECTION_BAD){
-        printf("La conexion a la base de datos ha sido correcta\n");
-    }
+
     do{
         //VALIDAR SI LA OPCION DEL MENU PRINCIPAL ES UN NUMERO
         do{
@@ -187,7 +183,7 @@ int main(int argc, char *argv[]){
 
     }while (opc != 7);
 
-    PQfinish(conn);
+    //PQfinish(conn);
     return 0;
 }
 int validar_entero(char sNum[tamano_maloc]){
@@ -230,8 +226,49 @@ char* menu_pacientes(){
     scanf("%s", opc);
     return opc;    
 }
+ /*if (PQstatus(conn) != CONNECTION_BAD){
+        res = PQexec(conn, "select folio_p, nom_p, edad_p, sexo_p, fecha_registro, correo, estado_p from pacientes;"); 
+
+        if (res != NULL && PGRES_TUPLES_OK == PQresultStatus(res)){
+            for (i = 0; i < PQntuples(res);i++)
+            {
+                for (j = 0; j < PQnfields(res);j++)
+                printf("%s\t",PQgetvalue(res,i,j));
+                printf("\n");
+            }
+            PQclear(res);
+        }
+    }
+
+    PQfinish(conn);*/
 void alta_pacientes(){ 
     printf("|------------------ALTA PACIENTES------------------|\n");
+    conn = PQsetdbLogin("localhost","5432",NULL,NULL,"lac","usuario1","usuario1");
+    char correo_dado[80], sql[100];
+    int i, j;
+    //SE PIDE EL CORREO PARA VER SI YA ESTA REGISTRADO
+    printf("Ingresa tu correo por por favor: ");
+    scanf("%s",correo_dado);
+    if (PQstatus(conn) != CONNECTION_BAD){
+        sprintf(sql, "select * from pacientes where correo ~ '^%s$';",correo_dado);
+        res = PQexec(conn, sql);
+        if(PQgetvalue(res,0,0) != NULL){
+            if (res != NULL){
+                for (i = 0; i < PQntuples(res);i++)
+                {
+                    for (j = 0; j < PQnfields(res);j++)
+                    printf("%s\t",PQgetvalue(res,i,j));
+                    printf("\n");
+                }
+                PQclear(res);
+            }
+        }else{
+            printf("No hay matriculas\n");
+        }
+    }else{
+        printf("Error de conexion a la base de datos\n");
+    }
+    PQfinish(conn);
     printf("---------------------------------------------------\n\n\n");
 }
 void actualizar_pacientes(){
