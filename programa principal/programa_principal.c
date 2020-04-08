@@ -246,21 +246,6 @@ char* menu_pacientes(){
     scanf("%s", opc);
     return opc;    
 }
- /*if (PQstatus(conn) != CONNECTION_BAD){
-        res = PQexec(conn, "select folio_p, nom_p, edad_p, sexo_p, fecha_registro, correo, estado_p from pacientes;"); 
-
-        if (res != NULL && PGRES_TUPLES_OK == PQresultStatus(res)){
-            for (i = 0; i < PQntuples(res);i++)
-            {
-                for (j = 0; j < PQnfields(res);j++)
-                printf("%s\t",PQgetvalue(res,i,j));
-                printf("\n");
-            }
-            PQclear(res);
-        }
-    }
-
-    PQfinish(conn);*/
 void alta_pacientes(){ 
     printf("|------------------ALTA PACIENTES------------------|\n");
     conn = PQsetdbLogin("localhost","5432",NULL,NULL,"lac","usuario1","usuario1");
@@ -270,20 +255,22 @@ void alta_pacientes(){
     printf("Ingresa tu correo por por favor: ");
     scanf("%s",correo_dado);
     if (PQstatus(conn) != CONNECTION_BAD){
-        sprintf(sql, "select * from pacientes where correo ~ '^%s$';",correo_dado);
+        sprintf(sql, "select folio_p from pacientes where correo ~ '^%s$';",correo_dado);
         res = PQexec(conn, sql);
-        if(PQgetvalue(res,0,0) != NULL){
+        if(PQresultStatus(res) != PGRES_TUPLES_OK){
+            printf("si\n");
+        }
+        else{
+            //printf("no\n");
             if (res != NULL){
-                for (i = 0; i < PQntuples(res);i++)
-                {
-                    for (j = 0; j < PQnfields(res);j++)
-                    printf("%s\t",PQgetvalue(res,i,j));
-                    printf("\n");
-                }
-                PQclear(res);
+                    for (i = 0; i < PQntuples(res);i++)
+                    {
+                        for (j = 0; j < PQnfields(res);j++)
+                        printf("Folio del paciente %s\t",PQgetvalue(res,i,j));
+                        printf("\n");
+                    }
+                    PQclear(res);
             }
-        }else{
-            printf("No hay matriculas\n");
         }
     }else{
         printf("Error de conexion a la base de datos\n");
