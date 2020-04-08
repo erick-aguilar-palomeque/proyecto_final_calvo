@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <postgresql/libpq-fe.h>
 #define ANSI_COLOR_RED     "\x1b[31m" // color rojo
 #define ANSI_COLOR_RESET   "\x1b[0m"  // resetear color
 
 void hacer_select();
 int validar_entero();
+char* validar_cadena();
 
 char* menu_principal();
 
@@ -46,10 +48,16 @@ int tamano_maloc=20;
 
     
 int main(int argc, char *argv[]){
-    //int var;
-    //var=validar_entero("1a");
-    //printf("var: %d\n",var);
-    
+    char cadena_prueba[tamano_maloc];
+    printf("Ingresa un texo: ");
+    scanf("%s",cadena_prueba);
+    if((strcmp(validar_cadena(cadena_prueba),"no")==0)){//SI VALIDAR_CADENA REGRESA "NO", NO ES UNA CADENA VALIDA
+        printf("La cadena no es valida\n");
+    }
+    else{
+        printf("La cadena si es valida\n");    
+    }
+    /*
     int opc, opc_paciente, opc_laboratorista, opc_analisis, opc_materiales,opc_reactivos, opc_reportes;
 
     do{
@@ -190,16 +198,16 @@ int main(int argc, char *argv[]){
         }
 
     }while (opc != 7);
-
+*/
     //PQfinish(conn);
     return 0;
 }
 
 int validar_entero(char cadena[tamano_maloc]){    
-    int z,valor=1, num;//Z ES UN CONTADOR, SI VALOR ES 0 SIGNIFICA QUE NO ES UN NUMERO, SI ES 1 SIGNIFICA QUE LA CADENA SI ES UN NUMERO
+    int z,valor=1, num;//Z ES UN CONTADOR, SI VALOR ES 0 SIGNIFICA QUE EL CARACTER NO ES UN NUMERO, SI ES 1 SIGNIFICA QUE EL CARACTER SI ES UN NUMERO
     char x[10]={'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
     for (z=0; z<strlen(cadena);z++){//ESTE FOR RECORRE LA CADENA CARACTER POR CARACTER
-        if(cadena[z] == x[0] || cadena[z] == x[1] || cadena[z] == x[2] || cadena[z] == x[3] || cadena[z] == x[4] || cadena[z] == x[5] || cadena[z] == x[6] || cadena[z] == x[7] || cadena[z] == x[8] || cadena[z] == x[9]){//ESTE IF VALIDA QUE LO INGRESADO SEA UN DIGITO
+        if(isdigit(cadena[z]) != 0){//ESTE IF VALIDA QUE LO INGRESADO SEA UN DIGITO     
                 valor = 1;//SI LA CONDICION SE CUMPLE, TOMA EL VALOR DE 1 LO QUE SIGNIFICA QUE EL CARACTER ANALIZADO SI ES UN NUMERO
         }
         else{
@@ -216,6 +224,29 @@ int validar_entero(char cadena[tamano_maloc]){
         num = -1;
     }
     return num;
+}
+
+char* validar_cadena(char cadena[tamano_maloc]){ 
+    char* cadena_devolver = malloc(tamano_maloc);   
+    int z,valor=1, num;//Z ES UN CONTADOR, SI VALOR ES 0 SIGNIFICA QUE EL CARACTER NO ES UNA LETRA, SI ES 1 SIGNIFICA QUE EL CARACTER SI ES UNA LETRA
+    for (z=0; z<strlen(cadena);z++){//ESTE FOR RECORRE LA CADENA CARACTER POR CARACTER
+        if(isalpha(cadena[z]) != 0){//ESTE IF VALIDA QUE LO INGRESADO SEA UN DIGITO
+                valor = 1;//SI LA CONDICION SE CUMPLE, TOMA EL VALOR DE 1 LO QUE SIGNIFICA QUE EL CARACTER ANALIZADO SI ES UN NUMERO
+        }
+        else{
+            valor = 0; //SI LA CONDICION NO SE COMPLE, TOMA EL VALOR DE 0, ES DECIR, EL CARACTER ANALIZADO NO ES UN NUMERO  
+        } 
+        if(valor==0){//SI ALGUN CARACTER NO ES UN NUMERO SALE DEL FOR
+            break;
+        }
+    }
+    if(valor==1){//SI LA CADENA TIENE PURAS LETRAS SE REGRESA LA CADENA
+        cadena_devolver=cadena;
+    }
+    else{//SI LA CADENA NO ES UN NUMERO DEVUELVE -1
+        cadena_devolver="no";
+    }
+    return cadena_devolver;
 }
 char* menu_principal(){
     char* opc = malloc(tamano_maloc);
@@ -257,22 +288,20 @@ void alta_pacientes(){
     if (PQstatus(conn) != CONNECTION_BAD){
         sprintf(sql, "select folio_p from pacientes where correo ~ '^%s$';",correo_dado);
         res = PQexec(conn, sql);
-        if(PQresultStatus(res) != PGRES_TUPLES_OK){
-            printf("si\n");
-        }
-        else{
-            //printf("no\n");
-            if (res != NULL){
-                    for (i = 0; i < PQntuples(res);i++)
-                    {
-                        for (j = 0; j < PQnfields(res);j++)
-                        printf("Folio del paciente %s\t",PQgetvalue(res,i,j));
-                        printf("\n");
-                    }
-                    PQclear(res);
+        if (res != NULL && PQntuples(res)!=0){
+            for (i = 0; i < PQntuples(res);i++){
+                for (j = 0; j < PQnfields(res);j++){
+                    printf("Folio del paciente %s\t",PQgetvalue(res,i,j));
+                    printf("\n");
+                }
+                PQclear(res);
             }
         }
-    }else{
+        else{
+            printf("No se ha encontrado el correo en la base de datos\n");
+        }
+    }
+    else{
         printf("Error de conexion a la base de datos\n");
     }
     PQfinish(conn);
