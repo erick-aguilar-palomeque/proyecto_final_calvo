@@ -3,7 +3,7 @@ CREATE TABLE Pacientes(
 	nom_p text,
 	edad_p int,
 	sexo_p text,
-	fecha_registro date,
+	fecha_registro date default now(),
 	correo text,
 	estado_p boolean default true	
 );
