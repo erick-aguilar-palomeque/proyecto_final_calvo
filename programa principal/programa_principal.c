@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <postgresql/libpq-fe.h>
 #define ANSI_COLOR_RED "\x1b[31m"  // color rojo
+#define ANSI_COLOR_GREEN   "\x1b[32m"  // color verde
 #define ANSI_COLOR_RESET "\x1b[0m" // resetear color
 
 void hacer_select();
@@ -52,16 +53,6 @@ int tamano_maloc = 50;
 
 int main(int argc, char *argv[])
 {
-    /*char cadena_prueba[tamano_maloc];
-    printf("Ingresa un texo: ");
-    scanf("%s",cadena_prueba);
-    if((strcmp(validar_cadena(cadena_prueba),"no")==0)){//SI VALIDAR_CADENA REGRESA "NO", NO ES UNA CADENA VALIDA
-        printf("La cadena no es valida\n");
-    }
-    else{
-        printf("La cadena si es valida\n");    
-    }*/
-
     int opc, opc_paciente, opc_laboratorista, opc_analisis, opc_materiales, opc_reactivos, opc_reportes;
 
     do
@@ -77,20 +68,13 @@ int main(int argc, char *argv[])
                 switch (opc_paciente)
                 {
                 case 1:
-                    system("clear");
-                    alta_pacientes();
-                    break;
+                    system("clear"); alta_pacientes(); break;
                 case 2:
-                    system("clear");
-                    actualizar_pacientes();
-                    break;
+                    system("clear"); actualizar_pacientes(); break;
                 case 3:
-                    system("clear");
-                    buscar_pacientes();
-                    break;
+                    system("clear"); buscar_pacientes(); break;
                 case 4:
-                    system("clear");
-                    break;
+                    system("clear"); break;
                 default:
                     system("clear");
                     printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET);
@@ -107,24 +91,15 @@ int main(int argc, char *argv[])
                 switch (opc_laboratorista)
                 {
                 case 1:
-                    system("clear");
-                    alta_laboratoristas();
-                    break;
+                    system("clear"); alta_laboratoristas(); break;
                 case 2:
-                    system("clear");
-                    actualizar_laboratoristas();
-                    break;
+                    system("clear"); actualizar_laboratoristas(); break;
                 case 3:
-                    system("clear");
-                    buscar_laboratoristas();
-                    break;
+                    system("clear"); buscar_laboratoristas(); break;
                 case 4:
-                    system("clear");
-                    despedir_laboratoristas();
-                    break;
+                    system("clear"); despedir_laboratoristas(); break;
                 case 5:
-                    system("clear");
-                    break;
+                    system("clear"); break;
                 default:
                     system("clear");
                     printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET);
@@ -141,32 +116,19 @@ int main(int argc, char *argv[])
                 switch (opc_analisis)
                 {
                 case 1:
-                    system("clear");
-                    solicitar_analisis();
-                    break;
+                    system("clear"); solicitar_analisis(); break;
                 case 2:
-                    system("clear");
-                    realizar_analisis();
-                    break;
+                    system("clear"); realizar_analisis(); break;
                 case 3:
-                    system("clear");
-                    entregar_analisis();
-                    break;
+                    system("clear"); entregar_analisis(); break;
                 case 4:
-                    system("clear");
-                    buscar_analisis();
-                    break;
+                    system("clear"); buscar_analisis(); break;
                 case 5:
-                    system("clear");
-                    consultas_analisis();
-                    break;
+                    system("clear"); consultas_analisis(); break;
                 case 6:
-                    system("clear");
-                    agregar_nuevo_analisis();
-                    break;
+                    system("clear"); agregar_nuevo_analisis(); break;
                 case 7:
-                    system("clear");
-                    break;
+                    system("clear"); break;
                 default:
                     system("clear");
                     printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET);
@@ -182,17 +144,12 @@ int main(int argc, char *argv[])
                 opc_materiales = pedir_menu(5);
                 switch (opc_materiales)
                 {
-                case 1:
-                    system("clear");
-                    alta_materiales();
-                    break;
+                case 1: 
+                    system("clear"); alta_materiales(); break;
                 case 2:
-                    system("clear");
-                    baja_materiales();
-                    break;
+                    system("clear"); baja_materiales(); break;
                 case 3:
-                    system("clear");
-                    break;
+                    system("clear"); break;
                 default:
                     system("clear");
                     printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET);
@@ -209,16 +166,11 @@ int main(int argc, char *argv[])
                 switch (opc_reactivos)
                 {
                 case 1:
-                    system("clear");
-                    alta_reactivos();
-                    break;
+                    system("clear"); alta_reactivos(); break;
                 case 2:
-                    system("clear");
-                    baja_reactivos();
-                    break;
+                    system("clear"); baja_reactivos(); break;
                 case 3:
-                    system("clear");
-                    break;
+                    system("clear"); break;
                 default:
                     system("clear");
                     printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET);
@@ -244,7 +196,7 @@ int main(int argc, char *argv[])
 
     } while (opc != 7);
 
-    PQfinish(conn);
+    //PQfinish(conn);
     return 0;
 }
 
@@ -479,7 +431,7 @@ char *menu_pacientes()
 void alta_pacientes()
 {
     char sql[600];
-    conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "postgres", "unach");
+    conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
     printf("|------------------ALTA PACIENTES------------------|\n");
     struct
     {
@@ -504,7 +456,6 @@ void alta_pacientes()
     printf("INGRESE UN VALOR PARA EL CAMPO [CORREO] : ");
     scanf("%s", correo_dado);
     paciente[0].correo = strdup(correo_dado); //COPIIO EL CORREO QUE EL PACIENTE DIÓ AL STRUCT PACIENTE
-
 
 
 
@@ -628,14 +579,18 @@ void alta_pacientes()
 
                 conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "postgres", "unach");
                 if (PQstatus(conn) != CONNECTION_BAD){
-                    PQexec(conn, sql);
-                    printf("\n\n El paciente ha sido registrado con exito");
+                    res = PQexec(conn, sql);
+                    if(PQresultStatus(res) == PGRES_COMMAND_OK){
+                        printf(ANSI_COLOR_GREEN "Se ha registrado el paciente de manera exitosa\n" ANSI_COLOR_RESET);
+                    }else{
+                        printf(ANSI_COLOR_RED "No se ha podido registrar el paciente, notifique el error\n" ANSI_COLOR_RESET);
+                    }
                 }
                 else{
                 printf("No conecto esta mierda\n");
 
                 }
-                printf("\n%s\n",sql);
+                //printf("\n%s\n",sql);
                 //printf("INSERTADO\n");
             }
             else{

@@ -2,7 +2,7 @@
 	folio_p serial PRIMARY KEY,
 	nom_p text,
 	edad_p int,
-	sexo_p text,
+	sexo_p text check(sexo_p ~* '(femenino|masculino)',
 	fecha_registro date default now(),
 	correo text UNIQUE,
 	estado_p boolean default true	
