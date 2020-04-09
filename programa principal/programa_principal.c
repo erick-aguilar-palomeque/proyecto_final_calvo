@@ -244,7 +244,7 @@ int main(int argc, char *argv[])
 
     } while (opc != 7);
 
-    //PQfinish(conn);
+    PQfinish(conn);
     return 0;
 }
 
@@ -254,12 +254,7 @@ int pedir_entero(char capturando[tamano_maloc])
     do
     { //Inicio del do-while que realiza la validacion
         char *cadena = malloc(tamano_maloc);
-        if (strcmp(capturando, "CAMBIAR CORREO") == 0)
-        { //SI CAPTURANDO ES IGUAL A: "opcion" SE IMPRIME EL SIGUIENTE PRINTF
-            printf("\n[1] USAR ESTE CORREO\t[2] USAR OTRO CORREO : ");
-            capturando = strdup("CAMBIAR CORREO");
-        }
-        else if ((strcmp(capturando, "SEGUNDO NOMBRE") == 0))
+        if ((strcmp(capturando, "SEGUNDO NOMBRE") == 0))
         {
             printf("\n[1] SI TIENES SEGUNDO NOMBRE\t[2] SI NO TIENES SEGUNDO NOMBRE : ");
         }
@@ -483,7 +478,8 @@ char *menu_pacientes()
 }
 void alta_pacientes()
 {
-    char sql[400];
+    char sql[600];
+    conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "postgres", "unach");
     printf("|------------------ALTA PACIENTES------------------|\n");
     struct
     {
@@ -502,7 +498,7 @@ void alta_pacientes()
     paciente[0].apellido2 = malloc(tamano_maloc);paciente[0].nombre2 = strdup("null");
     paciente[0].sexo_p = malloc(tamano_maloc);
 
-    char correo_dado[80];
+    char correo_dado[200];
     int i, j;
     //SE PIDE EL CORREO PARA VER SI YA ESTA REGISTRADO
     printf("INGRESE UN VALOR PARA EL CAMPO [CORREO] : ");
@@ -510,12 +506,11 @@ void alta_pacientes()
     paciente[0].correo = strdup(correo_dado); //COPIIO EL CORREO QUE EL PACIENTE DIÓ AL STRUCT PACIENTE
 
 
-    conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "postgres", "unach");
 
 
     if (PQstatus(conn) != CONNECTION_BAD)
     {
-        sprintf(sql, "select folio_p from pacientes where correo ~ '^%s$';", correo_dado);
+        sprintf(sql, "select folio_p from pacientes where correo ~* '^%s$';", correo_dado);
         res = PQexec(conn, sql);
         if (res != NULL && PQntuples(res) != 0)
         {
@@ -531,31 +526,10 @@ void alta_pacientes()
         }
         else
         { //SI NO SE ENCONTRO SU CORREO SE DA DE ALTA:
-            PQfinish(conn);
+           // PQfinish(conn);
             int opc_correo, opc_nombre2,opc_sexo,opc_confirmacion;
             int salir = 0;
-            printf("\nNo se ha encontrado el correo en la base de datos, procederemos con el registro\n\n");
-            
-            //SABER SI QUIERE OTRO CORREO............................................
-            printf("     - > CORREO DE REGISTRO : %s\n", paciente[0].correo);
-            do
-            {
-                opc_correo = pedir_entero("CAMBIAR CORREO"); //SABER SI QUIERE USAR EL MISMO CORREO O OTRO
-                if ((opc_correo == 1) || (opc_correo == 2))
-                {
-                    salir = 1;
-                }
-                else{
-                     printf(ANSI_COLOR_RED "\nEl valor recibido no es 1 o 2\n" ANSI_COLOR_RESET);
-                }
-            } while (salir != 1);
-            //FIN SABER SI QUIERE OTRO CORREO.........................................
-
-            if (opc_correo == 2)
-            { //HAY QUE PEDIR CORREO
-                printf("\nINGRESE UN VALOR PARA EL CAMPO [CORREO] : ");
-                scanf("%s", paciente[0].correo);
-            }
+            printf("\nNo se ha encontrado el correo en la base de datos, procederemos con el registro\n");
 
             paciente[0].nombre1 = pedir_cadena("NOMBRE"); //PEDIMOS NOMBRE
 
@@ -641,7 +615,7 @@ void alta_pacientes()
             //FIN SABER SI QUIERE INSERTAR O NO.........................................
             system("clear");
 
-            char sql[400];
+            //char sql[400];
             if(opc_confirmacion == 1){//INSERTAMOS
                 if((strcmp(paciente[0].nombre2,"null") == 0)){//SI NO TIENE SEGUNDO NOMBRE
                 //NO IMPRIMIMOS SEGUNDO NOMBRE
@@ -655,9 +629,7 @@ void alta_pacientes()
                 conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "postgres", "unach");
                 if (PQstatus(conn) != CONNECTION_BAD){
                     PQexec(conn, sql);
-                    printf("\n\n El alumno ha sido registrado con exito");
-
-                    PQfinish(conn);
+                    printf("\n\n El paciente ha sido registrado con exito");
                 }
                 else{
                 printf("No conecto esta mierda\n");
@@ -675,6 +647,8 @@ void alta_pacientes()
             
 
         }
+        PQfinish(conn);
+
     }
     else
     {

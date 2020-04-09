@@ -1,100 +1,121 @@
-CREATE TABLE Pacientes(
+﻿CREATE TABLE Pacientes(
 	folio_p serial PRIMARY KEY,
 	nom_p text,
 	edad_p int,
 	sexo_p text,
 	fecha_registro date default now(),
-	correo text,
+	correo text UNIQUE,
 	estado_p boolean default true	
 );
 
 CREATE TABLE Laboratoristas(
 	cedula_lab text PRIMARY KEY,
+	nom_lab text,
 	fecha_nac_lab date,
 	sexo_lab text,
-	nom_lab text,
 	fecha_contratacion date,	
 	estado_lab boolean default true
 );
 
+
+CREATE TABLE Analisis(
+	num_a serial PRIMARY KEY,
+	nom_a text,
+	tiempo_realizacion int
+);
+
 CREATE TABLE Historial_clinico(
-	num_historial int PRIMARY KEY,
-	folio_p text REFERENCES Pacientes(folio_p),
+	folio_a serial PRIMARY KEY,
+	folio_p int REFERENCES Pacientes(folio_p),
+	num_a int REFERENCES Analisis(num_a),
 	status int,
+	fecha date,
 	cedula_lab text REFERENCES Laboratoristas(cedula_lab)	 
 );
 
 
 CREATE TABLE Materiales(
-	codi_barra_m int PRIMARY KEY,
+	codi_barra_m serial PRIMARY KEY,
 	nom_m text,
-	stock_m int
+	stock_max_m int,
+	stock_min_m int,
+	stock_actual_m int,
+	cant_ocupada_m int
 );
 
 CREATE TABLE Atributos(
-	folio_atri int PRIMARY KEY,
+	num_atri serial PRIMARY KEY,
 	nom_atri text,
-	descripcion_atri text,
+	descrip_atri text,
 	min float,
 	max float
 );
 
+CREATE TABLE Unidad_medida(
+	num_unidad serial PRIMARY KEY,
+	nom_atri text
+);
+
 CREATE TABLE Reactivos(
-	codi_barra_r int PRIMARY KEY,
+	codi_barra_r serial PRIMARY KEY,
 	nom_r text,
-	stock_r float,
-	fecha_cad date
+	num_unidad int REFERENCES Unidad_medida(num_unidad),
+	stock_max_r float,
+	stock_min_r float,
+	stock_actual_r float,
+	cant_ocupada_r float
 );
 
 CREATE TABLE Inventario_materiales(
-	num_inv_m int PRIMARY KEY,	
-	fecha_inv_m date,
+	num_inv_m serial PRIMARY KEY,	
+	fecha_inv_m date default now(),
 	codi_barra_m int REFERENCES Materiales(codi_barra_m),
-	cedula_lab text REFERENCES Laboratoristas(cedula_lab)
+	stock_anterior_m int,
+	stock_despues_m int,
+	cant_ocupada_m int,
+	folio_a int REFERENCES Historial_clinico(
+	folio_a)
 );
 
 CREATE TABLE Inventario_reactivos(
-	num_inv_r int PRIMARY KEY,	
-	fecha_inv_r date,
+	num_inv_r serial PRIMARY KEY,	
+	fecha_inv_r date default now(),
 	codi_barra_r int REFERENCES Reactivos(codi_barra_r),
-	cedula_lab text REFERENCES Laboratoristas(cedula_lab)
-);
-
-CREATE TABLE Analisis(
-	folio_a serial PRIMARY KEY,
-	nom_a text,
-	tiempo_realizacion int,
-	fecha_a date
+	stock_anterior_r float,
+	cant_ocupada_r float,
+	stock_despues_r float,
+	folia_a int REFERENCES Historial_clinico(folio_a)
 );
 
 CREATE TABLE Det_a_materiales(
-	folio_a int REFERENCES Analisis(folio_a),
+	num_a int REFERENCES Analisis(num_a),
 	cons_det_a_materiales int,
 	codi_barra_m int REFERENCES Materiales(codi_barra_m),
-	PRIMARY KEY(folio_a,cons_det_a_materiales)
+	PRIMARY KEY(num_a,cons_det_a_materiales)
 );
 
 CREATE TABLE Det_a_atributos(
-	folio_a int REFERENCES Analisis(folio_a),
+	num_a int REFERENCES Analisis(num_a),
 	cons_det_a_atributos int,
-	folio_atri int REFERENCES Atributos(folio_atri),
-	PRIMARY KEY(folio_a, cons_det_a_atributos)
+	num_atri int REFERENCES Atributos(num_atri),
+	PRIMARY KEY(num_a, cons_det_a_atributos)
 );
 
 CREATE TABLE Det_atributos(
-	folio_atri int REFERENCES Atributos(folio_atri),
+	num_atri int REFERENCES Atributos(num_atri),
 	cons_det_atributos int,
 	codi_barra_r int REFERENCES Reactivos(codi_barra_r),
-	PRIMARY KEY(folio_atri, cons_det_atributos)
+	PRIMARY KEY(num_atri, cons_det_atributos)
 );
 
 CREATE TABLE Resultados(
-	num_historial int REFERENCES Historial_clinico(num_historial),
+	folio_a int REFERENCES Historial_clinico(folio_a),
 	cons_resultados int,
 	resultado float,
-	folio_a int,
+	num_a int,
 	cons_det_a_atributos int,
-	FOREIGN KEY(folio_a, cons_det_a_atributos) REFERENCES Det_a_atributos(folio_a, cons_det_a_atributos),
-	folio_atri int REFERENCES Atributos(folio_atri),
-	PRIMARY KEY(num_historial, cons_resultados)	
+	FOREIGN KEY(num_a, cons_det_a_atributos) REFERENCES 
+	Det_a_atributos(num_a, cons_det_a_atributos),
+	num_atri int REFERENCES Atributos(num_atri),
+	PRIMARY KEY(folio_a, cons_resultados)	
 );
