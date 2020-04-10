@@ -7,8 +7,8 @@ void alta_materiales()
     {
         char *codbarra;
         char *nombre;
-        int *stockmax;
-        int *stockmin;
+        int stockmax;
+        int stockmin;
         int stockactual;
     } materiales[1];
     materiales[0].codbarra = malloc(tamano_maloc);
@@ -24,7 +24,7 @@ void alta_materiales()
 
             materiales[0].stockmin = pedir_entero("Stock minimo del material"); //PEDIMOS EL STOCK MINIMO QUE DEBE HABER
 
-            materiales[0].stockactual= pedir_entero("Cantidad"); //PEDIMOS CANTIDAD DE MATERIALES
+            materiales[0].stockactual= pedir_entero("Cantidad a ingresar"); //PEDIMOS CANTIDAD DE MATERIALES
 
             //IMPRIMIR LOS VALORES CAPTURADOS
             system("clear");
