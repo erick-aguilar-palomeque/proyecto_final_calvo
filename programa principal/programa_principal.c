@@ -11,9 +11,11 @@ void hacer_select();
 
 char *pedir_cadena();
 int pedir_entero();
+char *pedir_fecha();
 int pedir_menu();
 int validar_entero();
 char *validar_cadena();
+char *validar_fecha();
 int pedir_dos_opciones();
 
 char *menu_principal();
@@ -53,7 +55,7 @@ PGresult *resultado;
 int tamano_maloc = 50;
 
 int main(int argc, char *argv[])
-{
+{   
     int opc, opc_paciente, opc_laboratorista, opc_analisis, opc_materiales, opc_reactivos, opc_reportes;
 
     do
@@ -269,6 +271,29 @@ char *pedir_cadena(char capturando[tamano_maloc])
     return cadena_a_devolver;
 }
 
+char *pedir_fecha()
+{
+    char *cadena_a_devolver = malloc(tamano_maloc);
+    do
+    { //Inicio del do-while que realiza la validacion
+        char *cadena = malloc(tamano_maloc);
+        printf("\nINGRESE LA FECHA DE NACIMIENTO (EJ. : 01/02/2020) : ");
+        scanf("%s", cadena);
+        cadena_a_devolver = validar_fecha(cadena);
+        if ((strcmp(cadena_a_devolver, "-1") == 0))
+        { //SI cadena_a_devolver VALE -1 SIGNIFICA QUE LA FECHA NO ES VALIDA
+            printf(ANSI_COLOR_RED "\nLa fecha no es valida, intente de nuevo\n" ANSI_COLOR_RESET);
+        }
+        if ((strcmp(cadena_a_devolver, "-2") == 0))
+        { // SI cadena_a_devolver VALE -2 SIGNIFICA QUE EL LIMITE ESTABLECIDO PARA LA CADENA HA SIDO EXCEDIDO
+            printf(ANSI_COLOR_RED "\nLa fecha no tiene el numero de caracteres permitido\n" ANSI_COLOR_RESET);
+        }
+    } while ((strcmp(cadena_a_devolver, "-1") == 0) || (strcmp(cadena_a_devolver, "-2") == 0)); //SI LA CADENA NO ES VALIDA O SE PASA DEL RANGO DE CARACTERES, SE REPITE
+
+    return cadena_a_devolver;
+}
+
+  
 int pedir_menu(int num_menu)
 
 {
@@ -323,6 +348,50 @@ int pedir_menu(int num_menu)
     // FIN VALIDAR....................................................................................................
     return opc;
 }
+
+
+char *validar_fecha(char cadena[tamano_maloc])
+{
+    char *fecha_devolver = malloc(tamano_maloc);
+    char diagonal[1]="/";
+    int valor;
+    if (strlen(cadena) == 10)
+    {//LA CADENA TIENE 10 CARACTERES A FUERZA 01/12/2020
+        for (int i = 0; i < strlen(cadena); i++){
+            if(i == 2 || i == 5){//SIGNIFICA QUE AHI DEBEN HABER DIAGONALES
+                if(cadena[i] == '/'){//SI EL CARACTER ES DIAGONAL
+                    valor =1 ;        
+                }
+                else{
+                    valor = 0;
+                }
+            }
+            else{//SIGNIFICA QUE AHI DEBEN HABER NUMEROS
+                if(isdigit(cadena[i]) != 0){//SI EL CARACTER ES DIGITO
+                    valor =1;
+                }
+                else{
+                    valor = 0;
+                }
+            }
+            if(valor == 0){
+                break;
+            }
+        }   //FIN FOR
+    }// FIN IF
+    else{//SI LA CADENA EXCEDE LA CANTIDAD PERMITIDA, fecha_devolver VALE -2 LO CUAL SIGNIFICA QUE LA CADENA NO ES CORRECTA
+        valor = 3;
+        fecha_devolver = "-2";
+    }
+
+    if(valor == 0){//SI LA CADENA NO ES VALIDA
+        fecha_devolver = "-1";
+    }
+    if(valor == 1){//SI LA CADENA ES VALIDA
+        fecha_devolver = strdup(cadena);
+    }
+        return fecha_devolver;
+}   
 
 int validar_entero(char cadena[tamano_maloc])
 {
@@ -736,9 +805,9 @@ char *menu_reportes()
 {
     system("clear");
     printf("|-----------------MENU REPORTES------------------|\n");
-    char *nombre = malloc(tamano_maloc);
-    nombre = pedir_cadena("nombre");
-    printf("Tu nombre es: %s \n", nombre);
+    char *prueba = malloc(tamano_maloc);
+    prueba = pedir_fecha();
+    printf("\nFecha: %s\n",prueba);
     printf("---------------------------------------------------\n\n\n");
     return "0";
 }
