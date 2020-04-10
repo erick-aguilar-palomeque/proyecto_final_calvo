@@ -14,6 +14,7 @@ int pedir_entero();
 int pedir_menu();
 int validar_entero();
 char *validar_cadena();
+int pedir_dos_opciones();
 
 char *menu_principal();
 
@@ -435,6 +436,7 @@ void alta_pacientes()
     printf("|------------------ALTA PACIENTES------------------|\n");
     struct
     {
+        char *folio;
         char *nombre1;
         char *nombre2;
         char *apellido1;
@@ -443,6 +445,7 @@ void alta_pacientes()
         char *sexo_p;
         char *correo;
     } paciente[1];
+    paciente[0].folio = malloc(tamano_maloc);
     paciente[0].correo = malloc(tamano_maloc);
     paciente[0].nombre1 = malloc(tamano_maloc);
     paciente[0].nombre2 = malloc(tamano_maloc);
@@ -457,22 +460,31 @@ void alta_pacientes()
     scanf("%s", correo_dado);
     paciente[0].correo = strdup(correo_dado); //COPIIO EL CORREO QUE EL PACIENTE DIÓ AL STRUCT PACIENTE
 
-
-
     if (PQstatus(conn) != CONNECTION_BAD)
     {
         sprintf(sql, "select folio_p from pacientes where correo ~* '^%s$';", correo_dado);
         res = PQexec(conn, sql);
-        if (res != NULL && PQntuples(res) != 0)
-        {
+        if (res != NULL && PQntuples(res) != 0)//SI SE ENCONTRÓ EN EL SISTEMA
+        {int folio;
+            //SE IMPRIME SU FOLIO
             for (i = 0; i < PQntuples(res); i++)
             {
                 for (j = 0; j < PQnfields(res); j++)
                 {
-                    printf("Folio del paciente %s\t", PQgetvalue(res, i, j));
-                    printf("\n");
+                    paciente[0].folio = PQgetvalue(res, i, j);//SE OBTIENE SU FOLIO DEL PACIENTE
+                    folio = atoi(paciente[0].folio); // SE CONVIERTE EL FOLIO A ENTERO
+                    printf(ANSI_COLOR_GREEN "Se ha encontrado el correo en el sistema\n" ANSI_COLOR_RESET);
+                    printf("\n     - > FOLIO DEL PACIENTE : %d\t\n\n", folio);//SE IMPRIME SU FOLIO DEL PACIENTE
                 }
                 PQclear(res);
+            }
+            //SE LE ACTUALIZA SU ESTADO A TRUE POR SI LO TENÍA EN FALSE
+            sprintf(sql, "update pacientes set estado_p = true where folio_p = %d;",folio);
+            res = PQexec(conn, sql);
+            if(PQresultStatus(res) == PGRES_COMMAND_OK){
+                printf(ANSI_COLOR_GREEN "Se ha actualizar el estado del paciente de manera exitosa\n" ANSI_COLOR_RESET);
+            }else{
+                printf(ANSI_COLOR_RED "No se ha podido actualizar el estado del paciente\n" ANSI_COLOR_RESET);
             }
         }
         else
@@ -484,22 +496,8 @@ void alta_pacientes()
 
             paciente[0].nombre1 = pedir_cadena("NOMBRE"); //PEDIMOS NOMBRE
 
-            //SABER SI TIENE SEGUNDO NOMBRE............................................
-            do
-            {
-                salir = 0;
-                opc_nombre2 = pedir_entero("SEGUNDO NOMBRE"); //SABER SI TIENE OTRO NOMBRE
-                if ((opc_nombre2 == 1) || (opc_nombre2 == 2))
-                {
-                    salir = 1;
-                }
-                else{
-                     printf(ANSI_COLOR_RED "\nEl valor recibido no es 1 o 2\n" ANSI_COLOR_RESET);
-                }
-            } while (salir != 1);
-            //FIN SABER SI TIENE SEGUNDO NOMBRE.........................................
-
-            if (opc_nombre2 == 1)
+            opc_nombre2 = pedir_dos_opciones("SEGUNDO NOMBRE");//SABER SI TIENE SEGUNDO NOMBRE
+            if (opc_nombre2 == 1)//SI TIENE SEGUNDO NOMBRE
             { //HAY QUE PEDIR SEGUNDO NOMBRE                                                    
                 paciente[0].nombre2 = pedir_cadena("SEGUNDO NOMBRE"); //PEDIMOS SEGUNDO NOMBRE
             }
@@ -510,20 +508,7 @@ void alta_pacientes()
 
             paciente[0].edad = pedir_entero("EDAD"); //PEDIMOS EDAD
 
-            //SABER SEXO............................................
-            do
-            {salir=0;
-                opc_sexo = pedir_entero("SEXO"); //SABER SI QUIERE USAR EL MISMO CORREO O OTRO
-                if ((opc_sexo == 1) || (opc_sexo == 2))
-                {
-                    salir = 1;
-                }
-                else{
-                     printf(ANSI_COLOR_RED "\nEl valor recibido no es 1 o 2\n" ANSI_COLOR_RESET);
-                }
-            } while (salir != 1);
-            //FIN SABER SEXO.........................................
-
+            opc_sexo = pedir_dos_opciones("SEXO");
             if(opc_sexo == 1){//ES MASCULINO
                 paciente[0].sexo_p = strdup("masculino"); 
             }
@@ -550,20 +535,7 @@ void alta_pacientes()
             printf("     - > SEXO: %s\n",paciente[0].sexo_p);
             printf("---------------------------------------------------");
 
-            //SABER SI QUIERE INSERTAR O NO............................................
-            do
-            { 
-                salir=0;
-                opc_confirmacion = pedir_entero("CONFIRMAR REGISTRO"); //SABER SI QUIERE DAR DE ALTA AL PACIENTE CON LOS DATOS RECOPILADOS
-                if ((opc_confirmacion== 1) || (opc_confirmacion == 2))
-                {
-                    salir = 1;
-                }
-                else{
-                     printf(ANSI_COLOR_RED "\nEl valor recibido no es 1 o 2\n" ANSI_COLOR_RESET);
-                }
-            } while (salir != 1);
-            //FIN SABER SI QUIERE INSERTAR O NO.........................................
+            opc_confirmacion = pedir_dos_opciones("CONFIRMAR REGISTRO");
             system("clear");
 
             //char sql[400];
@@ -590,17 +562,12 @@ void alta_pacientes()
                 printf("No conecto esta mierda\n");
 
                 }
-                //printf("\n%s\n",sql);
-                //printf("INSERTADO\n");
             }
             else{
                 //INFORMAMOS QUE SE CANCELÓ
                     printf("CANCELADO\n");
             }
             
-
-            
-
         }
         PQfinish(conn);
 
@@ -609,8 +576,23 @@ void alta_pacientes()
     {
         printf("Error de conexion a la base de datos\n");
     }
-    //system("clear");
     printf("---------------------------------------------------\n\n\n");
+}
+int pedir_dos_opciones(char palabra_clave[tamano_maloc])
+{
+    int salir, opc;
+    do
+        {salir=0;
+        opc = pedir_entero(palabra_clave); //SE PIDE UN ENTERO Y SE MANDA LA PALABRA CLAVE PARA UN MENSAJE PERSONALIZADO
+        if ((opc == 1) || (opc == 2))
+        {
+            salir = 1;//SI LAS OPCION ELEGIDA ES 1 O 2 SALIR=1 PARA QUE SALGA DEL CICLO
+        }
+        else{
+            printf(ANSI_COLOR_RED "\nEl valor recibido no es 1 o 2\n" ANSI_COLOR_RESET);
+        }
+    } while (salir != 1);
+    return opc;
 }
 void actualizar_pacientes()
 {
