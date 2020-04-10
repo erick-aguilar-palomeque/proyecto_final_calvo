@@ -549,7 +549,6 @@ void alta_pacientes()
                     sprintf(sql, "insert into pacientes (nom_p, edad_p, sexo_p, correo) values('%s %s %s %s', %d, '%s', '%s');",paciente[0].nombre1, paciente[0].nombre2, paciente[0].apellido1, paciente[0].apellido2, paciente[0].edad, paciente[0].sexo_p, paciente[0].correo);
                 }
 
-                conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "postgres", "unach");
                 if (PQstatus(conn) != CONNECTION_BAD){
                     res = PQexec(conn, sql);
                     if(PQresultStatus(res) == PGRES_COMMAND_OK){
