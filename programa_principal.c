@@ -814,7 +814,7 @@ char *menu_reportes()
 void hacer_select()
 {
     /*PGconn *conn;
-    PGresult res;/
+    PGresult res;*/
     int i, j;
     conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
     if (PQstatus(conn) != CONNECTION_BAD)
