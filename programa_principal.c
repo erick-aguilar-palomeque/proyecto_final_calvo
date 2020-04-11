@@ -689,8 +689,135 @@ char *menu_laboratoristas()
 }
 void alta_laboratoristas()
 {
+   char sql[600];
+    conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
     printf("|----------------ALTA LABORATORISTA----------------|\n");
-    printf("---------------------------------------------------\n\n\n");
+        struct
+    {
+        char *cedula;
+        char *nombre1;
+        char *nombre2;
+        char *apellido1;
+        char *apellido2;
+        char *sexo_lab;
+        char *correo;
+        char  *fecha_nac;
+    } laboratorista[1];
+    laboratorista[0].cedula = malloc(tamano_maloc);
+    laboratorista[0].correo = malloc(tamano_maloc);
+    laboratorista[0].nombre1 = malloc(tamano_maloc);
+    laboratorista[0].nombre2 = malloc(tamano_maloc);
+    laboratorista[0].apellido1 = malloc(tamano_maloc);
+    laboratorista[0].apellido2 = malloc(tamano_maloc);laboratorista[0].nombre2 = strdup("null");
+    laboratorista[0].sexo_lab = malloc(tamano_maloc);
+    laboratorista[0].fecha_nac = malloc(tamano_maloc);
+
+   
+
+     if (PQstatus(conn) != CONNECTION_BAD)
+    {
+         //SE DA DE ALTA:
+           // PQfinish(conn)
+
+            laboratorista[0].cedula = pedir_cadena("CEDULA"); //PEDIMOS CEDULA
+
+            int opc_correo, opc_nombre2,opc_sexo,opc_confirmacion;
+            int salir = 0;
+
+            laboratorista[0].nombre1 = pedir_cadena("NOMBRE"); //PEDIMOS NOMBRE
+
+            opc_nombre2 = pedir_dos_opciones("SEGUNDO NOMBRE");//SABER SI TIENE SEGUNDO NOMBRE
+            if (opc_nombre2 == 1)//SI TIENE SEGUNDO NOMBRE
+            { //HAY QUE PEDIR SEGUNDO NOMBRE                                                    
+                laboratorista[0].nombre2 = pedir_cadena("SEGUNDO NOMBRE"); //PEDIMOS SEGUNDO NOMBRE
+            }
+
+            laboratorista[0].apellido1 = pedir_cadena("PRIMER APELLIDO"); //PEDIMOS PRIMER APELLIDO
+
+            laboratorista[0].apellido2 = pedir_cadena("SEGUNDO APELLIDO"); //PEDIMOS SEGUNDO APELLIDO
+
+            laboratorista[0].fecha_nac = pedir_fecha("FECHA DE NACIMIENTO"); //PEDIMOS FECHA DE NACIMIENTO
+
+            char correo_dado[200];
+            int i, j;
+
+            printf("\n INGRESE UN VALOR PARA EL CAMPO [CORREO] : ");
+            scanf("%s", correo_dado);
+            laboratorista[0].correo = strdup(correo_dado);
+
+
+            opc_sexo = pedir_dos_opciones("SEXO");
+            if(opc_sexo == 1){//ES MASCULINO
+                laboratorista[0].sexo_lab = strdup("masculino"); 
+            }
+            else{//ES FEMENINO
+                laboratorista[0].sexo_lab = strdup("femenino");
+            }
+
+           
+            //IMPRIMIR LOS VALORES CAPTURADOS
+            system("clear");
+            printf("---------------------------------------------------\n");
+            printf("\tDATOS RECOPILADOS\n");
+            printf("---------------------------------------------------\n");
+            printf("     - > CEDULA: %s\n",laboratorista[0].cedula);
+            printf("     - > NOMBRE: %s\n",laboratorista[0].nombre1);
+            if((strcmp(laboratorista[0].nombre2,"null") == 0)){//SI NO TIENE SEGUNDO NOMBRE
+                //NO IMPRIMIMOS SEGUNDO NOMBRE
+            }
+            else{
+            printf("     - > SEGUNDO NOMBRE: %s\n",laboratorista[0].nombre2);
+            }
+            printf("     - > PRIMER APELLIDO: %s\n",laboratorista[0].apellido1);
+            printf("     - > SEGUNDO APELLIDO: %s\n",laboratorista[0].apellido2);
+            printf("     - > SEXO: %s\n",laboratorista[0].sexo_lab);
+            printf("     - > FECHA DE NACIMIENTO: %s\n",laboratorista[0].fecha_nac);
+            printf("     - > CORREO: %s\n",laboratorista[0].correo);
+
+            printf("---------------------------------------------------");
+
+            opc_confirmacion = pedir_dos_opciones("CONFIRMAR REGISTRO");
+            system("clear");
+
+            //char sql[400];
+            if(opc_confirmacion == 1){//INSERTAMOS
+                if((strcmp(laboratorista[0].nombre2,"null") == 0)){//SI NO TIENE SEGUNDO NOMBRE
+                //NO IMPRIMIMOS SEGUNDO NOMBRE
+                    sprintf(sql, "insert into laboratoristas (cedula_lab,nom_lab, sexo_lab, correo,fecha_nac_lab) values('%s','%s %s %s','%s', '%s','%s');",laboratorista[0].cedula,laboratorista[0].nombre1, laboratorista[0].apellido1, laboratorista[0].apellido2, laboratorista[0].sexo_lab, laboratorista[0].correo),laboratorista[0].fecha_nac;
+                }
+                else{ 
+                    //SI TIENE SEGUNDO NOMBRE
+                    sprintf(sql, "insert into laboratoristas (cedula_lab,nom_lab, sexo_lab, correo,feha_nac_lab) values('%s','%s %s %s %s', '%s', '%s', '%s');",laboratorista[0].cedula,laboratorista[0].nombre1, laboratorista[0].nombre2, laboratorista[0].apellido1, laboratorista[0].apellido2, laboratorista[0].sexo_lab, laboratorista[0].correo,laboratorista[0].fecha_nac);
+                }
+
+                if (PQstatus(conn) != CONNECTION_BAD){
+                    res = PQexec(conn, sql);
+                    if(PQresultStatus(res) == PGRES_COMMAND_OK){
+                        printf(ANSI_COLOR_GREEN "Se ha registrado el laboratorista de manera exitosa\n" ANSI_COLOR_RESET);
+                    }else{
+                        printf(ANSI_COLOR_RED "No se ha podido registrar el laboratorista, notifique el error\n" ANSI_COLOR_RESET);
+                    }
+                }
+                else{
+                printf("No conecto esta mierda\n");
+
+                }
+            }
+            else{
+                //INFORMAMOS QUE SE CANCELÓ
+                    printf(ANSI_COLOR_RED "CANCELADO\n"ANSI_COLOR_RESET);
+            }
+            
+        }
+        PQfinish(conn);
+
+    
+    /*else
+    {
+        printf("Error de conexion a la base de datos\n");
+    }*/
+
+   printf("---------------------------------------------------\n\n\n");
 }
 void actualizar_laboratoristas()
 {
