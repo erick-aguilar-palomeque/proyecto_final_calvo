@@ -6,6 +6,9 @@
 #define ANSI_COLOR_RED "\x1b[31m"  // color rojo
 #define ANSI_COLOR_GREEN   "\x1b[32m"  // color verde
 #define ANSI_COLOR_RESET "\x1b[0m" // resetear color
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
 
 void hacer_select();
 
@@ -17,6 +20,7 @@ int validar_entero();
 char *validar_cadena();
 char *validar_fecha();
 int pedir_dos_opciones();
+int pedir_tres_opciones();
 
 char *menu_principal();
 
@@ -24,6 +28,7 @@ char *menu_pacientes();
 void alta_pacientes();
 void actualizar_pacientes();
 void buscar_pacientes();
+void imprimir_pacientes();
 
 char *menu_laboratoristas();
 void alta_laboratoristas();
@@ -220,6 +225,18 @@ int pedir_entero(char capturando[tamano_maloc])
         else if (strcmp(capturando, "CONFIRMAR REGISTRO") == 0)
         {
             printf("\n[1] REGISTRAR PACIENTE\t[2] DESCARTAR REGISTRO : ");
+        }
+        else if (strcmp(capturando, "CONFIRMAR REGISTRO MATERIALES") == 0)
+        {
+            printf("\n[1] REGISTRAR MATERIAL\t[2] DESCARTAR REGISTRO : ");
+        }
+        else if (strcmp(capturando, "CONFIRMAR REGISTRO LAB") == 0)
+        {
+            printf("\n[1] REGISTRAR LABORATORISTA\t[2] DESCARTAR REGISTRO : ");
+        }
+        else if (strcmp(capturando, "BUSCAR PACIENTES") == 0)
+        {
+            printf("\n[1] BUSQUEDA POR FOLIO\t[2] BUSQUEDA POR CORREO\t [3] BUSQUEDA POR NOMBRE : ");
         }
         else
         { //SI NO IMPRIME EL PRINTF POR DEFECTO
@@ -628,7 +645,6 @@ void alta_pacientes()
                 }
                 else{
                 printf("No conecto esta mierda\n");
-
                 }
             }
             else{
@@ -669,8 +685,124 @@ void actualizar_pacientes()
 }
 void buscar_pacientes()
 {
+    int opc_busqueda, opc_nombre2, folio;
+    char sql[600];
+    struct
+    {
+        int folio;
+        char *nombre1;
+        char *nombre2;
+        char *apellido1;
+        char *apellido2;
+        char *correo;
+    } paciente[1];
+    paciente[0].correo = malloc(tamano_maloc);
+    paciente[0].nombre1 = malloc(tamano_maloc);
+    paciente[0].nombre2 = malloc(tamano_maloc);
+    paciente[0].apellido1 = malloc(tamano_maloc);
+    paciente[0].apellido2 = malloc(tamano_maloc);
+    paciente[0].nombre2 = strdup("null");
+
     printf("|-----------------BUSCAR PACIENTES-----------------|\n");
+    opc_busqueda = pedir_tres_opciones("BUSCAR PACIENTES");
+    switch (opc_busqueda)
+    {
+    case 1: 
+        paciente[0].folio = pedir_entero("FOLIO"); //PIDO FOLIO
+        //GENERAMOS LA CONSULTA
+        sprintf(sql, "select folio_p, nom_p, sexo_p, edad_p, correo, fecha_registro from pacientes where estado_p = true and folio_p = %d;", paciente[0].folio);
+        imprimir_pacientes(sql);//HACER LA BUSQUEDA Y IMPRIMIR 
+    break;
+    case 2: 
+        printf("\nINGRESE UN VALOR PARA EL CAMPO [CORREO] : ");//PEDIMOS CORREO
+        scanf("%s", paciente[0].correo);
+        
+        //GENERAMOS LA CONSULTA
+        sprintf(sql, "select folio_p, nom_p, sexo_p, edad_p, correo, fecha_registro from pacientes where estado_p = true and correo ~* '^%s$';",paciente[0].correo);
+        imprimir_pacientes(sql);//HACER LA BUSQUEDA Y IMPRIMIR   
+
+    break;
+
+    case 3: 
+        paciente[0].nombre1 = pedir_cadena("NOMBRE"); //PEDIMOS NOMBRE
+
+        opc_nombre2 = pedir_dos_opciones("SEGUNDO NOMBRE");//SABER SI TIENE SEGUNDO NOMBRE
+        if (opc_nombre2 == 1)//SI TIENE SEGUNDO NOMBRE
+        { //HAY QUE PEDIR SEGUNDO NOMBRE                                                    
+             paciente[0].nombre2 = pedir_cadena("SEGUNDO NOMBRE"); //PEDIMOS SEGUNDO NOMBRE
+        }
+        paciente[0].apellido1 = pedir_cadena("PRIMER APELLIDO"); //PEDIMOS PRIMER APELLIDO
+
+        paciente[0].apellido2 = pedir_cadena("SEGUNDO APELLIDO"); //PEDIMOS SEGUNDO APELLIDO
+
+        if((strcmp(paciente[0].nombre2,"null") == 0)){//NO TIENE SEGUNDO NOMBRE
+            sprintf(sql, "select folio_p, nom_p, sexo_p, edad_p, correo, fecha_registro from pacientes where estado_p = true and nom_p ~* '^%s %s %s$';",paciente[0].nombre1, paciente[0].apellido1, paciente[0].apellido2);
+        }
+        else{
+            sprintf(sql, "select folio_p, nom_p, sexo_p, edad_p, correo, fecha_registro from pacientes where estado_p = true and nom_p ~* '^%s %s %s %s$';",paciente[0].nombre1, paciente[0].nombre2, paciente[0].apellido1, paciente[0].apellido2);
+        }
+        imprimir_pacientes(sql);//HACER LA BUSQUEDA Y IMPRIMIR
+    break; 
+    }
+
     printf("---------------------------------------------------\n\n\n");
+}
+
+void imprimir_pacientes(char sql[600]){
+
+    conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");//CREAMOS LA CONEXION
+    
+    system("clear");
+
+    if (PQstatus(conn) != CONNECTION_BAD){
+        res = PQexec(conn, sql);
+        if (res != NULL && PQntuples(res) != 0){//SE ENCONTRARON PACIENTES
+            printf("---------------------------------------------------\n");
+            printf("\tPACIENTE ENCONTRADO\n");
+            printf("---------------------------------------------------\n\n");
+            //SE IMPRIMEN LOS PACIENTES ENCONTRADOS
+            for (int i = 0; i < PQntuples(res); i++)
+            {
+                for (int j = 0; j < PQnfields(res); j++)//hay 5 campos
+                {
+                    switch(j){
+                        case 0: printf("     - > FOLIO : "); printf(ANSI_COLOR_BLUE"%s\n\n"ANSI_COLOR_RESET,PQgetvalue(res, i, j));break;
+                        case 1: printf("     - > NOMBRE : "); printf(ANSI_COLOR_BLUE"%s\n\n"ANSI_COLOR_RESET,PQgetvalue(res, i, j));break;
+                        case 2: printf("     - > SEXO : "); printf(ANSI_COLOR_BLUE"%s\n\n"ANSI_COLOR_RESET,PQgetvalue(res, i, j));break;
+                        case 3: printf("     - > EDAD : "); printf(ANSI_COLOR_BLUE"%s\n\n"ANSI_COLOR_RESET,PQgetvalue(res, i, j));break;
+                        case 4: printf("     - > CORREO : "); printf(ANSI_COLOR_BLUE"%s\n\n"ANSI_COLOR_RESET,PQgetvalue(res, i, j));break;
+                        case 5: printf("     - > FECHA DE REGISTRO : "); printf(ANSI_COLOR_BLUE"%s\n\n"ANSI_COLOR_RESET,PQgetvalue(res, i, j));break;
+                    }
+                        
+                }   
+                PQclear(res);
+            }
+        }else{//NO SE ENCONTRARON PACIENTES
+            printf(ANSI_COLOR_RED "No se han encontrado pacientes\n" ANSI_COLOR_RESET);
+        }
+    }
+    else{
+        printf("No conecto esta mierda\n");
+    }
+
+    PQfinish(conn);//FINALIZAMOS LA CONEXION
+}
+
+int pedir_tres_opciones(char palabra_clave[tamano_maloc])
+{
+    int salir, opc;
+    do
+        {salir=0;
+        opc = pedir_entero(palabra_clave); //SE PIDE UN ENTERO Y SE MANDA LA PALABRA CLAVE PARA UN MENSAJE PERSONALIZADO
+        if ((opc == 1) || (opc == 2) || (opc == 3))
+        {
+            salir = 1;//SI LAS OPCION ELEGIDA ES 1, 2 o 3 SALIR=1 PARA QUE SALGA DEL CICLO
+        }
+        else{
+            printf(ANSI_COLOR_RED "\nEl valor recibido no es 1, 2 o 3\n" ANSI_COLOR_RESET);
+        }
+    } while (salir != 1);
+    return opc;
 }
 
 char *menu_laboratoristas()
@@ -689,8 +821,136 @@ char *menu_laboratoristas()
 }
 void alta_laboratoristas()
 {
+   char sql[600];
+    conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
     printf("|----------------ALTA LABORATORISTA----------------|\n");
-    printf("---------------------------------------------------\n\n\n");
+        struct
+    {
+        char *cedula;
+        char *nombre1;
+        char *nombre2;
+        char *apellido1;
+        char *apellido2;
+        char *sexo_lab;
+        char *correo;
+        char  *fecha_nac;
+    } laboratorista[1];
+    laboratorista[0].cedula = malloc(tamano_maloc);
+    laboratorista[0].correo = malloc(tamano_maloc);
+    laboratorista[0].nombre1 = malloc(tamano_maloc);
+    laboratorista[0].nombre2 = malloc(tamano_maloc);
+    laboratorista[0].apellido1 = malloc(tamano_maloc);
+    laboratorista[0].apellido2 = malloc(tamano_maloc);laboratorista[0].nombre2 = strdup("null");
+    laboratorista[0].sexo_lab = malloc(tamano_maloc);
+    laboratorista[0].fecha_nac = malloc(tamano_maloc);
+
+   
+
+     if (PQstatus(conn) != CONNECTION_BAD)
+    {
+         //SE DA DE ALTA:
+           // PQfinish(conn)
+            printf("\n INGRESE UN VALOR PARA EL CAMPO [CEDULA] : ");//PEDIR CEDULA
+            scanf("%s", laboratorista[0].cedula);
+            //laboratorista[0].cedula = pedir_cadena("CEDULA"); //PEDIMOS CEDULA
+
+            int opc_correo, opc_nombre2,opc_sexo,opc_confirmacion;
+            int salir = 0;
+
+            laboratorista[0].nombre1 = pedir_cadena("NOMBRE"); //PEDIMOS NOMBRE
+
+            opc_nombre2 = pedir_dos_opciones("SEGUNDO NOMBRE");//SABER SI TIENE SEGUNDO NOMBRE
+            if (opc_nombre2 == 1)//SI TIENE SEGUNDO NOMBRE
+            { //HAY QUE PEDIR SEGUNDO NOMBRE                                                    
+                laboratorista[0].nombre2 = pedir_cadena("SEGUNDO NOMBRE"); //PEDIMOS SEGUNDO NOMBRE
+            }
+
+            laboratorista[0].apellido1 = pedir_cadena("PRIMER APELLIDO"); //PEDIMOS PRIMER APELLIDO
+
+            laboratorista[0].apellido2 = pedir_cadena("SEGUNDO APELLIDO"); //PEDIMOS SEGUNDO APELLIDO
+
+            laboratorista[0].fecha_nac = pedir_fecha("FECHA DE NACIMIENTO"); //PEDIMOS FECHA DE NACIMIENTO
+
+            char correo_dado[200];
+            int i, j;
+
+            printf("\nINGRESE UN VALOR PARA EL CAMPO [CORREO] : ");
+            scanf("%s", correo_dado);
+            laboratorista[0].correo = strdup(correo_dado);
+
+
+            opc_sexo = pedir_dos_opciones("SEXO");
+            if(opc_sexo == 1){//ES MASCULINO
+                laboratorista[0].sexo_lab = strdup("masculino"); 
+            }
+            else{//ES FEMENINO
+                laboratorista[0].sexo_lab = strdup("femenino");
+            }
+
+           
+            //IMPRIMIR LOS VALORES CAPTURADOS
+            system("clear");
+            printf("---------------------------------------------------\n");
+            printf("\tDATOS RECOPILADOS\n");
+            printf("---------------------------------------------------\n");
+            printf("     - > CEDULA: %s\n",laboratorista[0].cedula);
+            printf("     - > NOMBRE: %s\n",laboratorista[0].nombre1);
+            if((strcmp(laboratorista[0].nombre2,"null") == 0)){//SI NO TIENE SEGUNDO NOMBRE
+                //NO IMPRIMIMOS SEGUNDO NOMBRE
+            }
+            else{
+            printf("     - > SEGUNDO NOMBRE: %s\n",laboratorista[0].nombre2);
+            }
+            printf("     - > PRIMER APELLIDO: %s\n",laboratorista[0].apellido1);
+            printf("     - > SEGUNDO APELLIDO: %s\n",laboratorista[0].apellido2);
+            printf("     - > SEXO: %s\n",laboratorista[0].sexo_lab);
+            printf("     - > FECHA DE NACIMIENTO: %s\n",laboratorista[0].fecha_nac);
+            printf("     - > CORREO: %s\n",laboratorista[0].correo);
+
+            printf("---------------------------------------------------");
+
+            opc_confirmacion = pedir_dos_opciones("CONFIRMAR REGISTRO LAB");
+            system("clear");
+
+            //char sql[400];
+            if(opc_confirmacion == 1){//INSERTAMOS
+                if((strcmp(laboratorista[0].nombre2,"null") == 0)){//SI NO TIENE SEGUNDO NOMBRE
+                //NO IMPRIMIMOS SEGUNDO NOMBRE
+                    sprintf(sql, "insert into laboratoristas (cedula_lab,nom_lab, sexo_lab, correo,fecha_nac_lab) values('%s','%s %s %s','%s', '%s','%s');",laboratorista[0].cedula,laboratorista[0].nombre1, laboratorista[0].apellido1, laboratorista[0].apellido2, laboratorista[0].sexo_lab, laboratorista[0].correo,laboratorista[0].fecha_nac);
+                }
+                else{ 
+                    //SI TIENE SEGUNDO NOMBRE
+                    sprintf(sql, "insert into laboratoristas (cedula_lab,nom_lab, sexo_lab, correo,feha_nac_lab) values('%s','%s %s %s %s', '%s', '%s', '%s');",laboratorista[0].cedula,laboratorista[0].nombre1, laboratorista[0].nombre2, laboratorista[0].apellido1, laboratorista[0].apellido2, laboratorista[0].sexo_lab, laboratorista[0].correo,laboratorista[0].fecha_nac);
+                }
+
+                if (PQstatus(conn) != CONNECTION_BAD){
+                    res = PQexec(conn, sql);
+                    if(PQresultStatus(res) == PGRES_COMMAND_OK){
+                        printf(ANSI_COLOR_GREEN "Se ha registrado el laboratorista de manera exitosa\n" ANSI_COLOR_RESET);
+                    }else{
+                        printf(ANSI_COLOR_RED "No se ha podido registrar el laboratorista, notifique el error\n" ANSI_COLOR_RESET);
+                    }
+                }
+                else{
+                printf("No conecto esta mierda\n");
+
+                }
+            }
+            else{
+                //INFORMAMOS QUE SE CANCELÓ
+                    printf(ANSI_COLOR_RED "CANCELADO\n"ANSI_COLOR_RESET);
+            }
+        PQfinish(conn);
+            
+        }
+
+    
+    else
+    {
+        printf("Error de conexion a la base de datos\n");
+    }
+
+   printf("---------------------------------------------------\n\n\n");
 }
 void actualizar_laboratoristas()
 {
@@ -769,7 +1029,73 @@ char *menu_materiales()
 }
 void alta_materiales()
 {
+  char sql[600];
+    conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
     printf("|-----------------ALTA  MATERIALES-----------------|\n");
+     struct
+    {
+        char *codbarra;
+        char *nombre;
+        int stockmax;
+        int stockmin;
+        int stockactual;
+    } materiales[1];
+    materiales[0].codbarra = malloc(tamano_maloc);
+    materiales[0].nombre = malloc(tamano_maloc);
+    
+     int opc_confirmacion;
+            int salir = 0;
+            printf("\nProcederemos al registro del material\n");
+
+            materiales[0].nombre = pedir_cadena("NOMBRE"); //PEDIMOS NOMBRE
+
+            materiales[0].stockmax = pedir_entero("STOCK MAXIMO"); //PEDIMOS EL STOCK MAXIMO QUE DEBE HABER
+
+            materiales[0].stockmin = pedir_entero("STOCK MINIMO"); //PEDIMOS EL STOCK MINIMO QUE DEBE HABER
+
+            materiales[0].stockactual= pedir_entero("STOCK ACTUAL"); //PEDIMOS EL STOCK ACTUAL
+
+            //IMPRIMIR LOS VALORES CAPTURADOS
+            system("clear");
+            printf("---------------------------------------------------\n");
+            printf("\tDATOS RECOPILADOS\n");
+            printf("---------------------------------------------------\n");
+            printf("     - > MATERIAL: %s\n",materiales[0].nombre);
+            printf("     - > STOCK MAXIMO: %d\n",materiales[0].stockmax);
+            printf("     - > STOCK MINIMO: %d\n",materiales[0].stockmin);
+            printf("     - > STOCK ACTUAL: %d\n",materiales[0].stockactual);
+            printf("---------------------------------------------------");
+
+            opc_confirmacion = pedir_dos_opciones("CONFIRMAR REGISTRO MATERIALES");
+            system("clear");
+
+            //char sql[400];
+            if(opc_confirmacion == 1){//INSERTAMOS
+               {//REGISTRAMOS EL MATERIAL
+                    sprintf(sql, "insert into materiales (nom_m, stock_max_m, stock_min_m, stock_actual_m) values('%s', %d, %d, %d);",materiales[0].nombre, materiales[0].stockmax,materiales[0].stockmin,materiales[0].stockactual);
+                }
+
+                if (PQstatus(conn) != CONNECTION_BAD){
+                    res = PQexec(conn, sql);
+                    if(PQresultStatus(res) == PGRES_COMMAND_OK){
+                        printf(ANSI_COLOR_GREEN "Se ha registrado el material de manera exitosa\n" ANSI_COLOR_RESET);
+                    }else{
+                        printf(ANSI_COLOR_RED "No se ha podido registrar el material, notifique el error\n" ANSI_COLOR_RESET);
+                    }
+                }
+                else{
+                printf("No conecto esta mierda\n");
+
+                }
+            }
+            else{
+                //INFORMAMOS QUE SE CANCELÓ
+                printf(ANSI_COLOR_RED "CANCELADO\n"ANSI_COLOR_RESET);
+            }
+
+         PQfinish(conn);
+
+
     printf("---------------------------------------------------\n\n\n");
 }
 void baja_materiales()

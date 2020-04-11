@@ -40,7 +40,8 @@ CREATE TABLE Materiales(
 	nom_m text,
 	stock_max_m int,
 	stock_min_m int,
-	stock_actual_m int
+	stock_actual_m int,
+	estado_m boolean default true
 );
 
 CREATE TABLE Atributos(
@@ -62,7 +63,8 @@ CREATE TABLE Reactivos(
 	num_unidad int REFERENCES Unidad_medida(num_unidad),
 	stock_max_r float,
 	stock_min_r float,
-	stock_actual_r float
+	stock_actual_r float,
+	estado_m boolean default true
 );
 
 CREATE TABLE Inventario_materiales(
