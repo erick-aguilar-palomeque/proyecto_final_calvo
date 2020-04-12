@@ -15,10 +15,12 @@ void hacer_select();
 char *pedir_cadena();
 int pedir_entero();
 char *pedir_fecha();
+double pedir_decimal();
 int pedir_menu();
 int validar_entero();
 char *validar_cadena();
 char *validar_fecha();
+double validar_decimal();
 int pedir_dos_opciones();
 int pedir_tres_opciones();
 
@@ -207,6 +209,32 @@ int main(int argc, char *argv[])
     //PQfinish(conn);
     return 0;
 }
+
+double pedir_decimal(char capturando[tamano_maloc])
+{
+    double numero;
+    do
+    { //Inicio del do-while que realiza la validacion
+        char *cadena = malloc(tamano_maloc);
+        printf("\nINGRESE UN VALOR PARA EL CAMPO [%s] : ", capturando);
+        scanf("%s", cadena);
+        numero = validar_decimal(cadena);
+        if (numero == -1)
+        { //SI NUMERO VALE -1 SIGNIFICA QUE LA CADENA EL NUMERO NO ES VALIDO
+                printf(ANSI_COLOR_RED "\nEl valor ingresado para el campo [%s] no es valido\n" ANSI_COLOR_RESET, capturando);
+        }
+        if (numero == -2)
+        { // SI NUMERO VALE -2 SIGNIFICA QUE EL LIMITE ESTABLECIDO PARA LA CADENA HA SIDO EXCEDIDO
+            printf(ANSI_COLOR_RED "\nCadena maxima excedida\n" ANSI_COLOR_RESET);
+        }
+        if (numero == -3){
+            printf(ANSI_COLOR_RED "\nNumero de decimales excedido\n" ANSI_COLOR_RESET);
+        }
+    } while (numero == -1 || numero == -2 || numero == -3); //Fin del do-while que realiza la validacion
+
+    return numero;
+}
+
 
 int pedir_entero(char capturando[tamano_maloc])
 {
@@ -484,6 +512,64 @@ char *validar_cadena(char cadena[tamano_maloc])
         cadena_devolver = "-1";
     }
     return cadena_devolver;
+}
+
+double validar_decimal(char cadena[tamano_maloc]){
+double decimal_devolver;
+    int z,valor = 1, puntos = 0, decimales = 0;
+    if(strlen(cadena) > tamano_maloc){
+        decimal_devolver = -2;
+        valor = 3;
+    }else{
+        for(z = 0; z < strlen(cadena); z++){
+            if(puntos == 0){
+                if(isdigit(cadena[z]) != 0){
+                valor = 1;
+                }else if(cadena[z] == '.'){
+                    valor = 1;
+                    puntos++;
+                }else
+                {
+                    valor = 0;
+                }
+                continue;//PROCEDE CON LA SIGUIENTE ITERACION
+            }
+            if(puntos >= 1){
+                if(isdigit(cadena[z]) != 0){
+                valor = 1;
+                decimales++;
+                }else if(cadena[z] == '.'){
+                    valor = 1;
+                    puntos++;
+                }else
+                {
+                    valor = 0;
+                }
+            }
+            
+            if(valor == 0){
+                break;
+            }
+        }
+
+        if(valor == 1){
+
+            if(puntos < 2){
+                decimal_devolver = atof(cadena);
+            }else{
+                decimal_devolver = -1;
+            }
+            
+        }else if(valor == 0){
+            decimal_devolver = -1;
+        }
+        if(decimales > 4){
+            decimal_devolver = -3;//-3 SIGNIFICA QUE HAY MAS DE 4 DECIMALES
+        }
+
+    }
+
+    return decimal_devolver;
 }
 char *menu_principal()
 {
@@ -1131,9 +1217,8 @@ char *menu_reportes()
 {
     system("clear");
     printf("|-----------------MENU REPORTES------------------|\n");
-    char *prueba = malloc(tamano_maloc);
-    prueba = pedir_fecha();
-    printf("\nFecha: %s\n",prueba);
+    double prueba = pedir_decimal("PRECIO");
+    printf("Prueba: %lf\n",prueba);
     printf("---------------------------------------------------\n\n\n");
     return "0";
 }
