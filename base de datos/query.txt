@@ -54,7 +54,7 @@ CREATE TABLE Atributos(
 
 CREATE TABLE Unidad_medida(
 	num_unidad serial PRIMARY KEY,
-	nom_atri text
+	nom_unidad text
 );
 
 CREATE TABLE Reactivos(
@@ -122,3 +122,8 @@ CREATE TABLE Resultados(
 	num_atri int REFERENCES Atributos(num_atri),
 	PRIMARY KEY(folio_a, cons_resultados)	
 );
+
+insert into unidad_medida(nom_unidad) values('Kg');
+insert into unidad_medida(nom_unidad) values('Gr');
+insert into unidad_medida(nom_unidad) values('Lt');
+insert into unidad_medida(nom_unidad) values('Ml');
