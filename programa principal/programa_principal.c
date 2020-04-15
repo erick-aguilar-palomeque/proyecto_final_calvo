@@ -30,13 +30,11 @@ char *menu_principal();
 
 char *menu_pacientes();
 void alta_pacientes();
-void actualizar_pacientes();
 void buscar_pacientes();
 void imprimir_pacientes();
 
 char *menu_laboratoristas();
 void alta_laboratoristas();
-void actualizar_laboratoristas();
 void buscar_laboratoristas();
 void despedir_laboratoristas();
 
@@ -85,21 +83,16 @@ int main(int argc, char *argv[])
                     break;
                 case 2:
                     system("clear");
-                    actualizar_pacientes();
-                    break;
-                case 3:
-                    system("clear");
                     buscar_pacientes();
                     break;
-                case 4:
-                    system("clear");
-                    break;
+                case 3:
+                    system("clear"); break;
                 default:
                     system("clear");
                     printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET);
                     break;
                 }
-            } while (opc_paciente != 4);
+            } while (opc_paciente != 3);
             break;
 
         case 2:
@@ -115,25 +108,20 @@ int main(int argc, char *argv[])
                     break;
                 case 2:
                     system("clear");
-                    actualizar_laboratoristas();
+                    buscar_laboratoristas();
                     break;
                 case 3:
                     system("clear");
-                    buscar_laboratoristas();
-                    break;
-                case 4:
-                    system("clear");
                     despedir_laboratoristas();
                     break;
-                case 5:
-                    system("clear");
-                    break;
+                case 4:
+                    system("clear"); break;
                 default:
                     system("clear");
                     printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET);
                     break;
                 }
-            } while (opc_laboratorista != 5);
+            } while (opc_laboratorista != 4);
             break;
 
         case 3:
@@ -710,9 +698,8 @@ char *menu_pacientes()
     char *opc = malloc(tamano_maloc);
     printf("|------------------MENU PACIENTES------------------|");
     printf("\n[1] ALTA");
-    printf("\n[2] ACTUALIZAR");
-    printf("\n[3] BUSCAR");
-    printf("\n[4] VOLVER AL MENU PRINCIPAL");
+    printf("\n[2] BUSCAR");
+    printf("\n[3] VOLVER AL MENU PRINCIPAL");
     printf("\n---------------------------------------------------\n");
     printf("Ingrese la opcion deseada : ");
     scanf("%s", opc);
@@ -899,11 +886,6 @@ int pedir_dos_opciones(char palabra_clave[tamano_maloc])
     } while (salir != 1);
     return opc;
 }
-void actualizar_pacientes()
-{
-    printf("|---------------ACTUALIZAR PACIENTES---------------|\n");
-    printf("---------------------------------------------------\n\n\n");
-}
 void buscar_pacientes()
 {
     int opc_busqueda, opc_nombre2, folio;
@@ -1059,10 +1041,9 @@ char *menu_laboratoristas()
     char *opc = malloc(tamano_maloc);
     printf("|--------------MENU  LABORATORISTAS----------------|");
     printf("\n[1] ALTA");
-    printf("\n[2] ACTUALIZAR");
-    printf("\n[3] BUSCAR");
-    printf("\n[4] DESPEDIR");
-    printf("\n[5] VOLVER AL MENU PRINCIPAL");
+    printf("\n[2] BUSCAR");
+    printf("\n[3] DESPEDIR");
+    printf("\n[4] VOLVER AL MENU PRINCIPAL");
     printf("\n---------------------------------------------------\n");
     printf("Ingrese la opcion deseada : ");
     scanf("%s", opc);
@@ -1206,11 +1187,6 @@ void alta_laboratoristas()
         printf("Error de conexion a la base de datos\n");
     }
 
-    printf("---------------------------------------------------\n\n\n");
-}
-void actualizar_laboratoristas()
-{
-    printf("|-------------ACTUALIZAR LABORATORISTA-------------|\n");
     printf("---------------------------------------------------\n\n\n");
 }
 void buscar_laboratoristas()
