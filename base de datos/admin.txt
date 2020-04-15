@@ -14,3 +14,6 @@ grant usage on reactivos_codi_barra_r_seq to administradores;
 grant select, insert,update on table reactivos to administradores;
 
 grant select on table unidad_medida to administradores;
+
+grant select, insert,update on table atributos to administradores;
+grant usage on atributos_num_atri_seq to administradores;

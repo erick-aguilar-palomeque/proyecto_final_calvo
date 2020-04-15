@@ -44,6 +44,7 @@ void realizar_analisis();
 void entregar_analisis();
 void buscar_analisis();
 void consultas_analisis();
+void agregar_atributos_analisis();
 void agregar_nuevo_analisis();
 
 char *menu_materiales();
@@ -55,7 +56,7 @@ void alta_reactivos();
 void baja_reactivos();
 
 char *menu_reportes();
-PGconn *conn;
+PGconn *conn, *conn2, *conn3;
 PGresult *res;
 PGresult *resultado;
 
@@ -86,7 +87,8 @@ int main(int argc, char *argv[])
                     buscar_pacientes();
                     break;
                 case 3:
-                    system("clear"); break;
+                    system("clear");
+                    break;
                 default:
                     system("clear");
                     printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET);
@@ -115,7 +117,8 @@ int main(int argc, char *argv[])
                     despedir_laboratoristas();
                     break;
                 case 4:
-                    system("clear"); break;
+                    system("clear");
+                    break;
                 default:
                     system("clear");
                     printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET);
@@ -153,9 +156,13 @@ int main(int argc, char *argv[])
                     break;
                 case 6:
                     system("clear");
-                    agregar_nuevo_analisis();
+                    agregar_atributos_analisis();
                     break;
                 case 7:
+                    system("clear");
+                    agregar_nuevo_analisis();
+                    break;
+                case 8:
                     system("clear");
                     break;
                 default:
@@ -163,7 +170,7 @@ int main(int argc, char *argv[])
                     printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET);
                     break;
                 }
-            } while (opc_analisis != 7);
+            } while (opc_analisis != 8);
             break;
 
         case 4:
@@ -341,6 +348,14 @@ int pedir_entero(char capturando[tamano_maloc])
         else if (strcmp(capturando, "BUSCAR PACIENTES") == 0)
         {
             printf("\n[1] BUSQUEDA POR FOLIO\t[2] BUSQUEDA POR CORREO\t [3] BUSQUEDA POR NOMBRE : ");
+        }
+        else if (strcmp(capturando, "CONFIRMAR REGISTRO ATRIBUTOS") == 0)
+        {
+            printf("\n[1] REGISTRAR ATRIBUTO\t[2] DESCARTAR REGISTRO : ");
+        }
+        else if (strcmp(capturando, "CONFIRMAR REGISTRO REACTIVOS") == 0)
+        {
+            printf("\n[1] REGISTRAR REACTIVO\t[2] DESCARTAR REGISTRO : ");
         }
         else
         { //SI NO IMPRIME EL PRINTF POR DEFECTO
@@ -708,7 +723,6 @@ char *menu_pacientes()
 void alta_pacientes()
 {
     char sql[600];
-    conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
     printf("|------------------ALTA PACIENTES------------------|\n");
     struct
     {
@@ -737,6 +751,7 @@ void alta_pacientes()
     scanf("%s", correo_dado);
     paciente[0].correo = strdup(correo_dado); //COPIIO EL CORREO QUE EL PACIENTE DIÓ AL STRUCT PACIENTE
 
+    conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
     if (PQstatus(conn) != CONNECTION_BAD)
     {
         sprintf(sql, "select folio_p from pacientes where correo ~* '^%s$';", correo_dado);
@@ -757,8 +772,9 @@ void alta_pacientes()
                 PQclear(res);
             }
             //SE LE ACTUALIZA SU ESTADO A TRUE POR SI LO TENÍA EN FALSE
+            conn2 = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");//ABRO CONEXION 2
             sprintf(sql, "update pacientes set estado_p = true where folio_p = %d;", folio);
-            res = PQexec(conn, sql);
+            res = PQexec(conn2, sql);
             if (PQresultStatus(res) == PGRES_COMMAND_OK)
             {
                 printf(ANSI_COLOR_GREEN "Se ha actualizar el estado del paciente de manera exitosa\n" ANSI_COLOR_RESET);
@@ -767,6 +783,7 @@ void alta_pacientes()
             {
                 printf(ANSI_COLOR_RED "No se ha podido actualizar el estado del paciente\n" ANSI_COLOR_RESET);
             }
+            PQfinish(conn2);//CIERRO CONEXION 2
         }
         else
         { //SI NO SE ENCONTRO SU CORREO SE DA DE ALTA:
@@ -829,17 +846,18 @@ void alta_pacientes()
                 if ((strcmp(paciente[0].nombre2, "null") == 0))
                 { //SI NO TIENE SEGUNDO NOMBRE
                     //NO IMPRIMIMOS SEGUNDO NOMBRE
-                    sprintf(sql, "insert into pacientes (nom_p, edad_p, sexo_p, correo) values('%s %s %s', %d, '%s', '%s');", paciente[0].nombre1, paciente[0].apellido1, paciente[0].apellido2, paciente[0].edad, paciente[0].sexo_p, paciente[0].correo);
+                    sprintf(sql, "insert into pacientes (nom_p, edad_p, sexo_p, correo) values(UPPER('%s %s %s'), %d, UPPER('%s'), UPPER('%s'));", paciente[0].nombre1, paciente[0].apellido1, paciente[0].apellido2, paciente[0].edad, paciente[0].sexo_p, paciente[0].correo);
                 }
                 else
                 {
                     //SI TIENE SEGUNDO NOMBRE
-                    sprintf(sql, "insert into pacientes (nom_p, edad_p, sexo_p, correo) values('%s %s %s %s', %d, '%s', '%s');", paciente[0].nombre1, paciente[0].nombre2, paciente[0].apellido1, paciente[0].apellido2, paciente[0].edad, paciente[0].sexo_p, paciente[0].correo);
+                    sprintf(sql, "insert into pacientes (nom_p, edad_p, sexo_p, correo) values(UPPER('%s %s %s %s'), %d, UPPER('%s'), UPPER('%s'));", paciente[0].nombre1, paciente[0].nombre2, paciente[0].apellido1, paciente[0].apellido2, paciente[0].edad, paciente[0].sexo_p, paciente[0].correo);
                 }
 
-                if (PQstatus(conn) != CONNECTION_BAD)
+                conn3 = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");//ABRO CONEXION 3
+                if (PQstatus(conn3) != CONNECTION_BAD)
                 {
-                    res = PQexec(conn, sql);
+                    res = PQexec(conn3, sql);
                     if (PQresultStatus(res) == PGRES_COMMAND_OK)
                     {
                         printf(ANSI_COLOR_GREEN "Se ha registrado el paciente de manera exitosa\n" ANSI_COLOR_RESET);
@@ -853,6 +871,7 @@ void alta_pacientes()
                 {
                     printf("No conecto esta mierda\n");
                 }
+                PQfinish(conn3); //CIERRO CONEXION 3
             }
             else
             {
@@ -860,12 +879,12 @@ void alta_pacientes()
                 printf(ANSI_COLOR_RED "CANCELADO\n" ANSI_COLOR_RESET);
             }
         }
-        PQfinish(conn);
     }
     else
     {
         printf("Error de conexion a la base de datos\n");
     }
+    PQfinish(conn);
     printf("---------------------------------------------------\n\n\n");
 }
 int pedir_dos_opciones(char palabra_clave[tamano_maloc])
@@ -1149,14 +1168,13 @@ void alta_laboratoristas()
             if ((strcmp(laboratorista[0].nombre2, "null") == 0))
             { //SI NO TIENE SEGUNDO NOMBRE
                 //NO IMPRIMIMOS SEGUNDO NOMBRE
-                sprintf(sql, "insert into laboratoristas (cedula_lab,nom_lab, sexo_lab, correo,fecha_nac_lab) values('%s','%s %s %s','%s', '%s','%s');", laboratorista[0].cedula, laboratorista[0].nombre1, laboratorista[0].apellido1, laboratorista[0].apellido2, laboratorista[0].sexo_lab, laboratorista[0].correo, laboratorista[0].fecha_nac);
+                sprintf(sql, "insert into laboratoristas (cedula_lab,nom_lab, sexo_lab, correo,fecha_nac_lab) values(UPPER('%s'),UPPER('%s %s %s'),UPPER('%s'), UPPER('%s'),'%s');", laboratorista[0].cedula, laboratorista[0].nombre1, laboratorista[0].apellido1, laboratorista[0].apellido2, laboratorista[0].sexo_lab, laboratorista[0].correo, laboratorista[0].fecha_nac);
             }
             else
             {
                 //SI TIENE SEGUNDO NOMBRE
-                sprintf(sql, "insert into laboratoristas (cedula_lab,nom_lab, sexo_lab, correo,feha_nac_lab) values('%s','%s %s %s %s', '%s', '%s', '%s');", laboratorista[0].cedula, laboratorista[0].nombre1, laboratorista[0].nombre2, laboratorista[0].apellido1, laboratorista[0].apellido2, laboratorista[0].sexo_lab, laboratorista[0].correo, laboratorista[0].fecha_nac);
+                sprintf(sql, "insert into laboratoristas (cedula_lab,nom_lab, sexo_lab, correo,fecha_nac_lab) values(UPPER('%s'),UPPER('%s %s %s %s'), UPPER('%s'), UPPER('%s'), '%s');", laboratorista[0].cedula, laboratorista[0].nombre1, laboratorista[0].nombre2, laboratorista[0].apellido1, laboratorista[0].apellido2, laboratorista[0].sexo_lab, laboratorista[0].correo, laboratorista[0].fecha_nac);
             }
-
             if (PQstatus(conn) != CONNECTION_BAD)
             {
                 res = PQexec(conn, sql);
@@ -1179,14 +1197,12 @@ void alta_laboratoristas()
             //INFORMAMOS QUE SE CANCELÓ
             printf(ANSI_COLOR_RED "CANCELADO\n" ANSI_COLOR_RESET);
         }
-        PQfinish(conn);
     }
-
     else
     {
         printf("Error de conexion a la base de datos\n");
     }
-
+    PQfinish(conn);
     printf("---------------------------------------------------\n\n\n");
 }
 void buscar_laboratoristas()
@@ -1209,8 +1225,9 @@ char *menu_analisis()
     printf("\n[3] ENTREGAR ANALISIS");
     printf("\n[4] BUSCAR ANALISIS");
     printf("\n[5] CONSULTAS ANALISIS");
-    printf("\n[6] AGREGAR UN NUEVO ANALISIS");
-    printf("\n[7] VOLVER AL MENU PRINCIPAL");
+    printf("\n[6] AGREGAR ATRIBUTOS DE ANALISIS");
+    printf("\n[7] AGREGAR UN NUEVO ANALISIS");
+    printf("\n[8] VOLVER AL MENU PRINCIPAL");
     printf("\n---------------------------------------------------\n");
     printf("Ingrese la opcion deseada : ");
     scanf("%s", opc);
@@ -1239,6 +1256,82 @@ void buscar_analisis()
 void consultas_analisis()
 {
     printf("|----------------CONSULTAS ANALISIS----------------|\n");
+    printf("---------------------------------------------------\n\n\n");
+}
+void agregar_atributos_analisis()
+{
+    char sql[600];
+    conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
+    printf("|----------AGREGAR ATRIBUTOS  DE ANALISIS----------|\n");
+    struct
+    {
+        char *nombre;
+        char *descripcion;
+        double min;
+        double max;
+        int stockactual;
+    } atributos[1];
+    atributos[0].nombre = malloc(tamano_maloc);
+    atributos[0].descripcion = malloc(70);
+
+    int opc_confirmacion;
+    int salir = 0;
+    printf("\nProcederemos al registro del atributo\n");
+
+    atributos[0].nombre = pedir_cadena("NOMBRE"); //PEDIMOS NOMBRE
+
+    printf("\nINGRESE UN VALOR PARA EL CAMPO [DESCRIPCION] : "); //PEDIMOS DESCRIPCION
+    scanf("%s",atributos[0].descripcion);
+
+
+    atributos[0].min = pedir_decimal("VALOR MINIMO DEL ATRIBUTO"); //PEDIMOS VALOR MINIMO
+
+    atributos[0].max = pedir_decimal("VALOR MAXIMO DEL ATRIBUTO"); //PEDIMOS VALOR MAXIMO
+
+    //IMPRIMIR LOS VALORES CAPTURADOS
+    system("clear");
+    printf("---------------------------------------------------\n");
+    printf("\tDATOS RECOPILADOS\n");
+    printf("---------------------------------------------------\n");
+    printf("     - > ATRIBUTO: %s\n", atributos[0].nombre);
+    printf("     - > DESCRIPCION: %s\n", atributos[0].descripcion);
+    printf("     - > VALOR MINIMO: %lf\n", atributos[0].min);
+    printf("     - > VALOR MAXIMO: %lf\n", atributos[0].max);
+    printf("---------------------------------------------------");
+
+    opc_confirmacion = pedir_dos_opciones("CONFIRMAR REGISTRO ATRIBUTOS");
+    system("clear");
+
+    if (opc_confirmacion == 1)
+    {     //INSERTAMOS
+        { //REGISTRAMOS EL MATERIAL
+            sprintf(sql, "insert into atributos (nom_atri, descrip_atri, min, max) values(UPPER('%s'), UPPER('%s'), %lf, %lf);", atributos[0].nombre, atributos[0].descripcion, atributos[0].min, atributos[0].max);
+        }
+
+        if (PQstatus(conn) != CONNECTION_BAD)
+        {
+            res = PQexec(conn, sql);
+            if (PQresultStatus(res) == PGRES_COMMAND_OK)
+            {
+                printf(ANSI_COLOR_GREEN "Se ha registrado el atributo de manera exitosa\n" ANSI_COLOR_RESET);
+            }
+            else
+            {
+                printf(ANSI_COLOR_RED "No se ha podido registrar el atributo, notifique el error\n" ANSI_COLOR_RESET);
+            }
+        }
+        else
+        {
+            printf("La conexion no fue posible\n");
+        }
+
+    }
+    else
+    {
+        //INFORMAMOS QUE SE CANCELÓ
+        printf(ANSI_COLOR_RED "CANCELADO\n" ANSI_COLOR_RESET);
+    }
+    PQfinish(conn);
     printf("---------------------------------------------------\n\n\n");
 }
 void agregar_nuevo_analisis()
@@ -1305,7 +1398,7 @@ void alta_materiales()
     if (opc_confirmacion == 1)
     {     //INSERTAMOS
         { //REGISTRAMOS EL MATERIAL
-            sprintf(sql, "insert into materiales (nom_m, stock_max_m, stock_min_m, stock_actual_m) values('%s', %d, %d, %d);", materiales[0].nombre, materiales[0].stockmax, materiales[0].stockmin, materiales[0].stockactual);
+            sprintf(sql, "insert into materiales (nom_m, stock_max_m, stock_min_m, stock_actual_m) values(UPPER('%s'), %d, %d, %d);", materiales[0].nombre, materiales[0].stockmax, materiales[0].stockmin, materiales[0].stockactual);
         }
 
         if (PQstatus(conn) != CONNECTION_BAD)
@@ -1322,7 +1415,7 @@ void alta_materiales()
         }
         else
         {
-            printf("No conecto esta mierda\n");
+            printf("La conexion no fue posible\n");
         }
     }
     else
@@ -1370,7 +1463,7 @@ int consulta_rapida_enteros(char sql[100])
 void alta_reactivos()
 {
     char sql[600];
-    printf("|-----------------ALTA  REACTIVO-----------------|\n");
+    printf("|------------------ALTA  REACTIVO------------------|\n");
     struct
     {
         char *codbarra;
@@ -1388,7 +1481,7 @@ void alta_reactivos()
 
     reactivos[0].nombre = pedir_cadena("NOMBRE"); //PEDIMOS NOMBRE
 
-    reactivos[0].numunidad = pedir_unidad_medida();//PEDIMOS UNIDAD DE MEDIDA
+    reactivos[0].numunidad = pedir_unidad_medida(); //PEDIMOS UNIDAD DE MEDIDA
 
     reactivos[0].stockmax = pedir_decimal("STOCK MAXIMO"); //PEDIMOS EL STOCK MAXIMO QUE DEBE HABER
 
@@ -1408,16 +1501,16 @@ void alta_reactivos()
     printf("     - > STOCK ACTUAL %lf\n", reactivos[0].stockactual);
     printf("---------------------------------------------------");
 
-    opc_confirmacion = pedir_dos_opciones("CONFIRMAR REGISTRO");
+    opc_confirmacion = pedir_dos_opciones("CONFIRMAR REGISTRO REACTIVOS");
     system("clear");
 
     if (opc_confirmacion == 1)
     {     //INSERTAMOS
         { //REGISTRAMOS EL REACTIVO
-            sprintf(sql, "insert into reactivos (nom_r,num_unidad, stock_max_r, stock_min_r, stock_actual_r) values('%s', %d, %lf, %lf, %lf);",reactivos[0].nombre,reactivos[0].numunidad, reactivos[0].stockmax,reactivos[0].stockmin,reactivos[0].stockactual);
+            sprintf(sql, "insert into reactivos (nom_r, num_unidad, stock_max_r, stock_min_r, stock_actual_r) values(UPPER('%s'), %d, %lf, %lf, %lf);", reactivos[0].nombre, reactivos[0].numunidad, reactivos[0].stockmax, reactivos[0].stockmin, reactivos[0].stockactual);
         }
-        
-        conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");//ESTABLESCO UNA CONEXION
+
+        conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1"); //ESTABLESCO UNA CONEXION
         if (PQstatus(conn) != CONNECTION_BAD)
         {
             res = PQexec(conn, sql);
@@ -1429,19 +1522,18 @@ void alta_reactivos()
             {
                 printf(ANSI_COLOR_RED "No se ha podido registrar el reactivo, notifique el error\n" ANSI_COLOR_RESET);
             }
-            PQfinish(conn);
         }
         else
         {
             printf("La conexion no fue posible\n");
         }
+        PQfinish(conn);
     }
     else
     {
         //INFORMAMOS QUE SE CANCELÓ
         printf(ANSI_COLOR_RED "CANCELADO\n" ANSI_COLOR_RESET);
     }
-
 
     printf("---------------------------------------------------\n\n\n");
 }
