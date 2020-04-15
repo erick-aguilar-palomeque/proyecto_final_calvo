@@ -12,3 +12,5 @@ grant usage on materiales_codi_barra_m_seq to administradores;
 
 grant usage on reactivos_codi_barra_r_seq to administradores;
 grant select, insert,update on table reactivos to administradores;
+
+grant select on table unidad_medida to administradores;
