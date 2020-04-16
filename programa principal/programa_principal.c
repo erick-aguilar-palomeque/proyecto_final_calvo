@@ -45,6 +45,10 @@ void entregar_analisis();
 void buscar_analisis();
 void consultas_analisis();
 void agregar_atributos_analisis();
+void pedir_materiales_analisis();
+void pedir_atributos_analisis();
+int ver_si_algo_esta_repetido();
+int ver_si_algo_existe();
 void agregar_nuevo_analisis();
 
 char *menu_materiales();
@@ -245,53 +249,6 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-int pedir_unidad_medida()
-{
-    int opc_unidad_medida;
-
-    int n_unidades = consulta_rapida_enteros("select count(num_unidad) from unidad_medida");
-
-    int folios[n_unidades];
-    int salir;
-
-    do
-    {
-        conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
-        printf("\n\tUNIDADES DE MEDIDA\n");
-        //--------------------------------------------------------------------Pedir unidad de medida
-        if (PQstatus(conn) != CONNECTION_BAD)
-        {
-            res = PQexec(conn, "select num_unidad, nom_unidad from unidad_medida;");
-            if (res != NULL && PQntuples(res) != 0)
-            {
-                for (int i = 0; i < PQntuples(res); i++)
-                {
-                    folios[i] = atoi(PQgetvalue(res, i, 0));
-                    printf("[%d] %s\n", i + 1, PQgetvalue(res, i, 1)); //imprime todos las unidades
-                }
-            }
-            PQclear(res);
-        }
-        //--------------------------------------------------------------------Fin pedir unidad de medida
-        opc_unidad_medida = pedir_entero("UNIDAD DE MEDIDA");
-        if (opc_unidad_medida > 0 && opc_unidad_medida <= n_unidades)
-        {
-            salir = 1; //SI SALIR VALE UNO SALE DEL CICLO
-        }
-        else
-        {
-            salir = 0;
-            printf(ANSI_COLOR_RED "\nEl valor ingresado no corresponde a ninguna unidad de medida\n" ANSI_COLOR_RESET);
-        }
-
-        PQfinish(conn);
-
-    } while (salir != 1);
-
-    opc_unidad_medida = folios[opc_unidad_medida - 1]; //FOLIOS GUARDA LOS NUM_UNIDAD EN ORDEN, ASI QUE SI QUIERO LA SEGUNDA UNIDAD DEVOLVERÉ EL FOLIO[2-1] OSEA EL SEGUNDO FOLIO EN MOSTRARSE
-
-    return opc_unidad_medida;
-}
 
 double pedir_decimal(char capturando[tamano_maloc])
 {
@@ -356,6 +313,10 @@ int pedir_entero(char capturando[tamano_maloc])
         else if (strcmp(capturando, "CONFIRMAR REGISTRO REACTIVOS") == 0)
         {
             printf("\n[1] REGISTRAR REACTIVO\t[2] DESCARTAR REGISTRO : ");
+        }
+        else if (strcmp(capturando, "TIEMPO DE REALIZACION") == 0)
+        {
+            printf("\nINGRESE UN VALOR PARA EL CAMPO [TIEMPO DE REALIZACION] *En horas* : ");
         }
         else
         { //SI NO IMPRIME EL PRINTF POR DEFECTO
@@ -1276,7 +1237,6 @@ void agregar_atributos_analisis()
 
     int opc_confirmacion;
     int salir = 0;
-    printf("\nProcederemos al registro del atributo\n");
 
     atributos[0].nombre = pedir_cadena("NOMBRE"); //PEDIMOS NOMBRE
 
@@ -1334,9 +1294,291 @@ void agregar_atributos_analisis()
     PQfinish(conn);
     printf("---------------------------------------------------\n\n\n");
 }
+int ver_si_algo_existe( int opc, int algo){
+    int devolver;
+    char sql[600];
+    conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");//ESTABLESCO UNA CONEXION
+    if (PQstatus(conn) != CONNECTION_BAD)
+    {
+        switch (opc)
+        {
+        case 1://MATERIALES
+            sprintf(sql, "select codi_barra_m from materiales where codi_barra_m = %d and estado_m = true;", algo);
+            break;
+        case 2://ATRIBUTOS
+            sprintf(sql, "select num_atri from atributos where num_atri = %d and estado_atri = true;", algo);
+            break;
+        }
+        res = PQexec(conn, sql);//EJECUTA LA INSTRUCCION
+
+        if(res != NULL && PQntuples(res) != 0){//SI ENCONTRÓ ALGO
+            devolver = atoi(PQgetvalue(res, 0, 0)); //OBTIENE EL CODIGO DE BARRAS DEL MATERIAL
+        }
+        else{
+            devolver = -1;
+        }
+
+        PQfinish(conn);//CIERRO LA CONEXION
+    }
+
+    return devolver;    
+}
+
+
+int ver_si_algo_esta_repetido(int opc, int analisis_recibido, int algo_recibido){
+    char *material2 = malloc(tamano_maloc);
+    int material;
+    char sql[600];
+    conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");//ESTABLESCO UNA CONEXION
+    if (PQstatus(conn) != CONNECTION_BAD)
+    {
+        switch (opc)
+        {
+        case 1: //MATERIALES
+            sprintf(sql, "select codi_barra_m from Det_a_materiales where num_a = %d and codi_barra_m = %d;", analisis_recibido, algo_recibido);
+            break;
+        case 2: //ATRIBUTOS
+            sprintf(sql, "select num_atri from det_a_atributos where num_a = %d and num_atri = %d;", analisis_recibido, algo_recibido);
+            break;
+        }
+        res = PQexec(conn, sql);
+
+        if(res != NULL && PQntuples(res) != 0){//SI ENCONTRÓ ALGO
+            material = atoi(PQgetvalue(res, 0, 0)); //OBTIENE EL CODIGO DE BARRAS DEL MATERIAL
+        }
+        else{
+            material = -1;
+        }
+
+        PQfinish(conn);//CIERRO LA CONEXION
+    }
+
+    return material;    
+}
+void pedir_materiales_analisis(int num_a){
+    int salir, opc_materiales, otro_material, cantidad_ocupada;
+    char sql[600];
+    do{
+        do
+        {//CICLO PARA IMPRIMIR LOS CODIGOS DE BARRA
+            conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
+            printf("\n|----------AGREGAR  MATERIALES UTILIZADOS----------|\n");
+            //--------------------------------------------------------------------IMPRIMIR LOS MATERIALES DISPONIBLES
+            if (PQstatus(conn) != CONNECTION_BAD)
+            {
+                res = PQexec(conn, "select codi_barra_m, nom_m from materiales;");
+                if (res != NULL && PQntuples(res) != 0)
+                {
+                    for (int i = 0; i < PQntuples(res); i++)
+                    {
+                        printf("[%s] %s\n", PQgetvalue(res, i, 0), PQgetvalue(res, i, 1)); //IMPRIMIR MATERIAL ENCONTRADO
+                    }
+                    printf("[0] CONTINUAR\n"); 
+
+                }
+                PQclear(res);
+            }
+            PQfinish(conn);
+            //--------------------------------------------------------------------FIN IMPRIMIR LOS MATERIALES DISPONIBLES
+            opc_materiales = pedir_entero("CODIGO DE BARRA DE MATERIAL");
+
+            if (opc_materiales != 0){//SI LA OPCION NO ES CERO
+                opc_materiales = ver_si_algo_existe(1, opc_materiales);//CHECAR SI EXISTE
+            }
+            if (opc_materiales != -1)
+            {   
+                if(opc_materiales != 0){//SI ES 0 YA QUIERE SALIR, POR LO TANTO NO LE PIDE LA CANTIDAD OCUPADA
+                cantidad_ocupada = pedir_entero("CANTIDAD OCUPADA");//PEDIR CANTIDAD OCUPADA
+                }
+                salir = 1; //SI SALIR VALE UNO SALE DEL CICLO
+            }
+            else
+            {
+                salir = 0;
+                printf(ANSI_COLOR_RED "\nEl valor ingresado no corresponde a ningun codigo de barras de algun material disponible\n" ANSI_COLOR_RESET);
+            }
+
+        } while (salir != 1);//FIN CICLO INGRESAR VALORES CORRECTOS
+
+        if(opc_materiales != 0){//SI ELIGIÓ
+
+            int repetido = ver_si_algo_esta_repetido(1, num_a, opc_materiales);//SABER SI ESTA REPETIDO, SI DEVUELVE -1 ESTA REPETIDO
+            if(repetido != -1){//SI ESTA REPETIDO
+                printf(ANSI_COLOR_RED "\nEl material no puede repetirse, intente con otro\n" ANSI_COLOR_RESET);
+            
+            }
+            else{//SI NO ESTA REPETIDO, INSERTA
+                //INICIO INSERTAR-----------------------------------------------------------------------------------------------------
+                conn2 = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");//CREO UNA CONEXION 1
+                if (PQstatus(conn) != CONNECTION_BAD)
+                {
+                    sprintf(sql,"select max(cons_det_a_materiales) from Det_a_materiales where num_a = %d;",num_a);
+                    int consecutivo_mas_actual= consulta_rapida_enteros(sql);
+
+                    sprintf(sql,"insert into Det_a_materiales(num_a, cons_det_a_materiales, codi_barra_m,  cant_ocupada_m) values(%d, %d, %d, %d);",num_a, consecutivo_mas_actual+1, opc_materiales, cantidad_ocupada);
+                    res = PQexec(conn2, sql);
+                    if (PQresultStatus(res) == PGRES_COMMAND_OK)//PREGUNTA SI INSERTÓ
+                    {
+                        system("clear");
+                        printf(ANSI_COLOR_GREEN "Se ha registrado el material de manera exitosa\n" ANSI_COLOR_RESET);
+                    }
+                    else
+                    {
+                        printf(ANSI_COLOR_RED "No se ha podido registrar el material, notifique el error\n" ANSI_COLOR_RESET);
+                    }
+                }
+                else
+                {
+                    printf("La conexion no fue posible\n");
+                }
+                PQfinish(conn2);
+                //FIN INSERTAR---------------------------------------------------------------------------------------------------------
+            }
+        }
+        
+
+
+        otro_material = opc_materiales;
+    }while(otro_material != 0);
+    
+}
+void pedir_atributos_analisis(int num_a){
+    int salir, opc_atributos, otro_atributo;
+    char sql[600];
+    do{
+        do
+        {//CICLO PARA IMPRIMIR LOS NUMERO DE ATRIBUTO
+            conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
+            printf("\n|----------AGREGAR  ATRIBUTOS DEL ANALISIS----------|\n");
+            //--------------------------------------------------------------------IMPRIMIR LOS ATRIBUTOS DISPONIBLES
+            if (PQstatus(conn) != CONNECTION_BAD)
+            {
+                res = PQexec(conn, "select num_atri, nom_atri from atributos;");
+                if (res != NULL && PQntuples(res) != 0)
+                {
+                    for (int i = 0; i < PQntuples(res); i++)
+                    {
+                        printf("[%s] %s\n", PQgetvalue(res, i, 0), PQgetvalue(res, i, 1)); //IMPRIMIR ATRIBUTO ENCONTRADO
+                    }
+                    printf("[0] CONTINUAR\n"); 
+
+                }
+                PQclear(res);
+            }
+            PQfinish(conn);
+            //--------------------------------------------------------------------FIN IMPRIMIR LOS ATRIBUTOS DISPONIBLES
+            opc_atributos = pedir_entero("NUMERO DE ATRIBUTO");
+
+            if (opc_atributos != 0){//SI LA OPCION NO ES CERO
+                opc_atributos = ver_si_algo_existe(2, opc_atributos);//CHECAR SI EXISTE
+            }
+            if (opc_atributos != -1)
+            {   
+                salir = 1; //SI SALIR VALE UNO SALE DEL CICLO
+            }
+            else
+            {
+                salir = 0;
+                printf(ANSI_COLOR_RED "\nEl valor ingresado no corresponde a ningun numero de atributo de algun atributo disponible\n" ANSI_COLOR_RESET);
+            }
+
+        } while (salir != 1);//FIN CICLO INGRESAR VALORES CORRECTOS
+
+        if(opc_atributos != 0){//SI ELIGIÓ
+
+            int repetido = ver_si_algo_esta_repetido(2, num_a, opc_atributos);//SABER SI ESTA REPETIDO, SI DEVUELVE -1 ESTA REPETIDO
+            if(repetido != -1){//SI ESTA REPETIDO
+                printf(ANSI_COLOR_RED "\nEl atributo no puede repetirse, intente con otro\n" ANSI_COLOR_RESET);
+            
+            }
+            else{//SI NO ESTA REPETIDO, INSERTA
+                //INICIO INSERTAR-----------------------------------------------------------------------------------------------------
+                conn2 = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");//CREO UNA CONEXION 1
+                if (PQstatus(conn) != CONNECTION_BAD)
+                {
+                    sprintf(sql,"select max(cons_det_a_atributos) from Det_a_atributos where num_a = %d;",num_a);
+                    int consecutivo_mas_actual= consulta_rapida_enteros(sql);//OBTENER EL CONSECUTIVO MAS ACTUAL
+
+                    sprintf(sql,"insert into Det_a_atributos(num_a, cons_det_a_atributos, num_atri) values(%d, %d, %d);",num_a, consecutivo_mas_actual+1, opc_atributos);
+                    res = PQexec(conn2, sql);
+                    if (PQresultStatus(res) == PGRES_COMMAND_OK)//PREGUNTA SI INSERTÓ
+                    {
+                        system("clear");
+                        printf(ANSI_COLOR_GREEN "Se ha registrado el atributo de manera exitosa\n" ANSI_COLOR_RESET);
+                    }
+                    else
+                    {
+                        printf(ANSI_COLOR_RED "No se ha podido registrar el atributo, notifique el error\n" ANSI_COLOR_RESET);
+                    }
+                }
+                else
+                {
+                    printf("La conexion no fue posible\n");
+                }
+                PQfinish(conn2);
+                //FIN INSERTAR---------------------------------------------------------------------------------------------------------
+            }
+        }
+        
+
+
+        otro_atributo = opc_atributos;
+    }while(otro_atributo != 0);
+    
+
+}
 void agregar_nuevo_analisis()
 {
+    char sql[600];
+    int opc_confirmacion;
+    struct
+    {
+        char *nombre;
+        int tiempo_realizacion;
+    } analisis[1];
+    analisis[0].nombre = malloc(tamano_maloc);
+    
     printf("|--------------AGREGAR NUEVO ANALISIS--------------|\n");
+
+    analisis[0].nombre = pedir_cadena("NOMBRE DE ANALISIS");//PIDO NOMBRE DE ANALISIS
+
+    analisis[0].tiempo_realizacion = pedir_entero("TIEMPO DE REALIZACION");//PIDO TIEMPO DE REALIZACION
+
+
+    conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");//CREO UNA CONEXION 1
+    if (PQstatus(conn) != CONNECTION_BAD)
+        {
+            sprintf(sql,"insert into analisis(nom_a, tiempo_realizacion) values(UPPER('%s'), %d);",analisis[0].nombre, analisis[0].tiempo_realizacion);
+            res = PQexec(conn, sql);
+            if (PQresultStatus(res) == PGRES_COMMAND_OK)//SI INSERTÓ
+            {//quitar printf
+                PQfinish(conn);//FINALIZO CONEXION 1
+                printf(ANSI_COLOR_GREEN "Se ha registrado el analisis de manera exitosa\n" ANSI_COLOR_RESET);
+                int num_a = consulta_rapida_enteros("select max(num_a) from analisis;");//OBTENER EL ULTIMO ANALISIS INSERTADO
+
+                pedir_materiales_analisis(num_a);//PEDIR LOS MATERIALES UTILIZADOS PARA EL ANALISIS
+
+                pedir_atributos_analisis(num_a);//PEDIR LOS ATRIBUTOS QUE CALCULAR EL ANALISIS
+
+                //IMPRIMIR INFORMACIÓN DE ANALISIS
+
+                //CONFIRMAR REGISTRO DE ANALISIS Y RECHAZAR, ESO HARAS MAÑANA ERICK, TERMINALO, YA CASI QUEDÓ!!!!!!!!!!!!!!!!
+            }
+            else
+            {//quitar printf
+                PQfinish(conn);//FINALIZO CONEXION 1
+                printf(ANSI_COLOR_RED "No se ha podido registrar el analisis, notifique el error\n" ANSI_COLOR_RESET);
+            }
+        }
+        else
+        {
+            printf("La conexion no fue posible\n");
+        }
+    
+
+
+
+
     printf("---------------------------------------------------\n\n\n");
 }
 
@@ -1370,7 +1612,6 @@ void alta_materiales()
 
     int opc_confirmacion;
     int salir = 0;
-    printf("\nProcederemos al registro del material\n");
 
     materiales[0].nombre = pedir_cadena("NOMBRE"); //PEDIMOS NOMBRE
 
@@ -1447,7 +1688,7 @@ char *menu_reactivos(char palabra_clave[tamano_maloc])
     return opc;
 }
 
-int consulta_rapida_enteros(char sql[100])
+int consulta_rapida_enteros(char sql[600])
 {
     conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
     int devolver;
@@ -1459,6 +1700,54 @@ int consulta_rapida_enteros(char sql[100])
 
     PQfinish(conn);
     return devolver;
+}
+
+int pedir_unidad_medida()
+{
+    int opc_unidad_medida;
+
+    int n_unidades = consulta_rapida_enteros("select count(num_unidad) from unidad_medida");
+
+    int folios[n_unidades];
+    int salir;
+
+    do
+    {
+        conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
+        printf("\n\tUNIDADES DE MEDIDA\n");
+        //--------------------------------------------------------------------Pedir unidad de medida
+        if (PQstatus(conn) != CONNECTION_BAD)
+        {
+            res = PQexec(conn, "select num_unidad, nom_unidad from unidad_medida;");
+            if (res != NULL && PQntuples(res) != 0)
+            {
+                for (int i = 0; i < PQntuples(res); i++)
+                {
+                    folios[i] = atoi(PQgetvalue(res, i, 0));
+                    printf("[%d] %s\n", i + 1, PQgetvalue(res, i, 1)); //imprime todos las unidades
+                }
+            }
+            PQclear(res);
+        }
+        //--------------------------------------------------------------------Fin pedir unidad de medida
+        opc_unidad_medida = pedir_entero("UNIDAD DE MEDIDA");
+        if (opc_unidad_medida > 0 && opc_unidad_medida <= n_unidades)
+        {
+            salir = 1; //SI SALIR VALE UNO SALE DEL CICLO
+        }
+        else
+        {
+            salir = 0;
+            printf(ANSI_COLOR_RED "\nEl valor ingresado no corresponde a ninguna unidad de medida\n" ANSI_COLOR_RESET);
+        }
+
+        PQfinish(conn);
+
+    } while (salir != 1);
+
+    opc_unidad_medida = folios[opc_unidad_medida - 1]; //FOLIOS GUARDA LOS NUM_UNIDAD EN ORDEN, ASI QUE SI QUIERO LA SEGUNDA UNIDAD DEVOLVERÉ EL FOLIO[2-1] OSEA EL SEGUNDO FOLIO EN MOSTRARSE
+
+    return opc_unidad_medida;
 }
 void alta_reactivos()
 {
@@ -1477,7 +1766,6 @@ void alta_reactivos()
     reactivos[0].nombre = malloc(tamano_maloc);
 
     int opc_confirmacion, opc_unidad_medida, n_unidades;
-    printf("\nProcederemos al registro del reactivo\n");
 
     reactivos[0].nombre = pedir_cadena("NOMBRE"); //PEDIMOS NOMBRE
 

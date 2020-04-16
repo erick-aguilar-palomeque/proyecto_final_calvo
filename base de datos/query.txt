@@ -49,7 +49,8 @@ CREATE TABLE Atributos(
 	nom_atri text,
 	descrip_atri text,
 	min float,
-	max float
+	max float,
+	estado_atri boolean default true
 );
 
 CREATE TABLE Unidad_medida(
