@@ -65,7 +65,7 @@ CREATE TABLE Reactivos(
 	stock_max_r float,
 	stock_min_r float,
 	stock_actual_r float,
-	estado_m boolean default true
+	estado_r boolean default true
 );
 
 CREATE TABLE Inventario_materiales(
