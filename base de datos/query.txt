@@ -22,7 +22,8 @@ CREATE TABLE Laboratoristas(
 CREATE TABLE Analisis(
 	num_a serial PRIMARY KEY,
 	nom_a text,
-	tiempo_realizacion int
+	tiempo_realizacion int,
+	estado_a boolean default true
 );
 
 CREATE TABLE Historial_clinico(

@@ -1258,7 +1258,7 @@ void pedir_reactivos_atributos(int num_atri)
             {                                                         //SI LA OPCION NO ES CERO
                 opc_reactivos = ver_si_algo_existe(3, opc_reactivos); //CHECAR SI EXISTE
             }
-            if (opc_reactivos != -1)
+            if (opc_reactivos != -1)//SI EL VALOR EXISTE
             {
                 if (opc_reactivos != 0)
                 {                                                         //SI ES 0 YA QUIERE SALIR, POR LO TANTO NO LE PIDE LA CANTIDAD OCUPADA
@@ -1273,6 +1273,7 @@ void pedir_reactivos_atributos(int num_atri)
             }
 
         } while (salir != 1); //FIN CICLO INGRESAR VALORES CORRECTOS
+        
 
         if (opc_reactivos != 0)
         {                                                                         //SI ELIGIÓ
@@ -1337,7 +1338,7 @@ void confirmar_reactivos_atributos(int num_atri)
             //{
             int i = 0;
             for (int j = 0; j < PQnfields(res); j++) //hay 5 campos
-            {puts("entro al for j");
+            {
                 switch (j)
                 {
                 case 0:
@@ -1516,10 +1517,13 @@ int ver_si_algo_existe(int opc, int algo)
         case 3:
             sprintf(sql, "select codi_barra_r from reactivos where codi_barra_r = %d and estado_r = true;", algo);
             break;
+        case 4:
+            sprintf(sql, "select num_a from analisis where num_a = %d and estado_a = true;", algo);
+            break;
         }
         res = PQexec(conn, sql); //EJECUTA LA INSTRUCCION
 
-        if (res != NULL && PQntuples(res) != 0)
+        if (res != NULL && PQntuples(res) != 0)//SI EL SELECT DEVOLVIÓ ALGO
         {                                           //SI ENCONTRÓ ALGO
             devolver = atoi(PQgetvalue(res, 0, 0)); //OBTIENE EL CODIGO DE BARRAS DEL MATERIAL
         }
