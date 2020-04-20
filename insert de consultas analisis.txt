@@ -1,0 +1,14 @@
+insert into pacientes values (1, 'Daniel Anaya', 21, 'MASCULINO', '2020-03-03', 'daniel@hotmal.com', 'true');
+insert into pacientes values (2, 'Erick Aguilar', 20, 'MASCULINO', '2020-01-01', 'erick@hotmal.com', 'true');
+insert into pacientes values (3, 'Xiomara Castañeda', 20, 'FEMENINO', '2020-02-02', 'xiomara@hotmal.com', 'true');
+
+insert into analisis values (1, 'CANCER',1);
+insert into analisis values (2, 'AZUCAR',2);
+insert into analisis values (3, 'CORONAVIRUS',3);
+insert into analisis values (4, 'SIDA',4);
+
+insert into historial_clinico values (1,1,1,1,'2020-12-12','ABC1');
+insert into historial_clinico values (2,2,2,2,'2020-10-10','ABC2');
+insert into historial_clinico values (3,3,3,3,'2020-11-11','ABC3');
+
+
