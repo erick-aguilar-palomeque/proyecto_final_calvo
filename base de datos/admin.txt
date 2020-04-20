@@ -24,3 +24,6 @@ grant select, insert,update,delete on table analisis to administradores;
 grant select, insert,update, delete on table Det_a_materiales to administradores;
 
 grant select, insert,update, delete on table Det_atributos to administradores;
+
+
+grant select, insert,update on table historial_clinico to administradores;

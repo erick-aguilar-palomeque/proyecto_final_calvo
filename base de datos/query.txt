@@ -129,3 +129,22 @@ insert into unidad_medida(nom_unidad) values('Kg');
 insert into unidad_medida(nom_unidad) values('Gr');
 insert into unidad_medida(nom_unidad) values('Lt');
 insert into unidad_medida(nom_unidad) values('Ml');
+
+
+insert into pacientes (nom_p, edad_p, sexo_p, correo) values ('Daniel Anaya', 21, 'MASCULINO', 'daniel@hotmal.com');
+insert into pacientes (nom_p, edad_p, sexo_p, correo) values ('Erick Aguilar', 20, 'MASCULINO', 'erick@hotmal.com');
+insert into pacientes (nom_p, edad_p, sexo_p, correo) values ('Xiomara Castañeda', 20, 'FEMENINO', 'xiomara@hotmal.com');
+
+insert into laboratoristas (cedula_lab,nom_lab, sexo_lab, correo,fecha_nac_lab) values(UPPER('ABC1'),UPPER('luis'),UPPER('masculino'), UPPER('luis@gmail.com'),'07/12/2000');
+insert into laboratoristas (cedula_lab,nom_lab, sexo_lab, correo,fecha_nac_lab) values(UPPER('ABC2'),UPPER('mario'),UPPER('masculino'), UPPER('mario@gmail.com'),'07/12/2000');
+insert into laboratoristas (cedula_lab,nom_lab, sexo_lab, correo,fecha_nac_lab) values(UPPER('ABC3'),UPPER('marleny'),UPPER('femenino'), UPPER('marleny@gmail.com'),'07/12/2000');
+
+insert into analisis(nom_a, tiempo_realizacion) values ('CANCER',1);
+insert into analisis(nom_a, tiempo_realizacion) values ('AZUCAR',2);
+insert into analisis(nom_a, tiempo_realizacion) values ('CORONAVIRUS',3);
+insert into analisis(nom_a, tiempo_realizacion) values ('SIDA',4);
+
+insert into historial_clinico (folio_p, cedula_lab, num_a, fecha, status) values (9,'ABC1', 38, now(), 1);
+insert into historial_clinico (folio_p, cedula_lab, num_a, fecha, status) values (10,'ABC2', 39, now(), 2);
+insert into historial_clinico (folio_p, cedula_lab, num_a, fecha, status) values (11,'ABC3', 40, now(), 3);
+insert into historial_clinico (folio_p, cedula_lab, num_a, fecha, status) values (9,'ABC3', 1, now(), 3);
