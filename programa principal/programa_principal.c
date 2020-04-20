@@ -35,6 +35,7 @@ void imprimir_pacientes();
 
 char *menu_laboratoristas();
 void alta_laboratoristas();
+void imprimir_laboratoristas();
 void buscar_laboratoristas();
 void despedir_laboratoristas();
 
@@ -328,6 +329,10 @@ int pedir_entero(char capturando[tamano_maloc])
         else if (strcmp(capturando, "OPCIÓN DE ANÁLISIS") == 0)
         {
             printf("\n[1] ANÁLISIS SOLICITADOS\t[2] ANÁLISIS REALIZADOS\t [3] ANÁLISIS ENTREGADOS : ");
+        }
+        else if (strcmp(capturando, "BUSCAR LABORATORISTA") == 0)
+        {
+            printf("\n[1] BUSQUEDA POR CEDULA\t[2] BUSQUEDA POR CORREO\t [3] BUSQUEDA POR NOMBRE : ");
         }
         else
         { //SI NO IMPRIME EL PRINTF POR DEFECTO
@@ -1179,8 +1184,132 @@ void alta_laboratoristas()
 }
 void buscar_laboratoristas()
 {
-    printf("|---------------BUSCAR LABORATORISTA---------------|\n");
+    int opc_busqueda, opc_nombre2, cedula;
+    char sql[600];
+    struct
+    {
+        char *cedula;
+        char *nombre1;
+        char *nombre2;
+        char *apellido1;
+        char *apellido2;
+        char *correo;
+    } laboratorista[1];
+    laboratorista[0].correo = malloc(tamano_maloc);
+    laboratorista[0].cedula = malloc(tamano_maloc);
+    laboratorista[0].nombre1 = malloc(tamano_maloc);
+    laboratorista[0].nombre2 = malloc(tamano_maloc);
+    laboratorista[0].apellido1 = malloc(tamano_maloc);
+    laboratorista[0].apellido2 = malloc(tamano_maloc);
+    laboratorista[0].nombre2 = strdup("null");
+
+    printf("|-----------------BUSCAR LABORATORISTA-----------------|\n");
+    opc_busqueda = pedir_tres_opciones("BUSCAR LABORATORISTA");
+    switch (opc_busqueda)
+    {
+   case 1:
+        printf("\nINGRESE UN VALOR PARA EL CAMPO [CEDULA] : "); //PEDIMOS CORREO
+        scanf("%s", laboratorista[0].cedula);
+         //GENERAMOS LA CONSULTA
+        sprintf(sql, "select cedula_lab, nom_lab, sexo_lab, correo, fecha_contratacion from laboratoristas where estado_lab = true and cedula_lab ~* '^%s$';", laboratorista[0].cedula); //comparar cadenas usar expresion regular
+        imprimir_laboratoristas(sql); //HACER LA BUSQUEDA E IMPRIMIR
+        break;
+    case 2:
+        printf("\nINGRESE UN VALOR PARA EL CAMPO [CORREO] : "); //PEDIMOS CORREO
+        scanf("%s", laboratorista[0].correo);
+
+        //GENERAMOS LA CONSULTA
+        sprintf(sql, "select cedula_lab, nom_lab, sexo_lab, correo, fecha_contratacion from laboratoristas where estado_lab = true and correo ~* '^%s$';", laboratorista[0].correo);
+        imprimir_laboratoristas(sql); //HACER LA BUSQUEDA Y IMPRIMIR
+
+        break;
+
+     case 3:
+        laboratorista[0].nombre1 = pedir_cadena("NOMBRE"); //PEDIMOS NOMBRE
+
+        opc_nombre2 = pedir_dos_opciones("SEGUNDO NOMBRE");       //SABER SI TIENE SEGUNDO NOMBRE
+        if (opc_nombre2 == 1)                                     //SI TIENE SEGUNDO NOMBRE
+        {                                                         //HAY QUE PEDIR SEGUNDO NOMBRE
+            laboratorista[0].nombre2 = pedir_cadena("SEGUNDO NOMBRE"); //PEDIMOS SEGUNDO NOMBRE
+        }
+        laboratorista[0].apellido1 = pedir_cadena("PRIMER APELLIDO"); //PEDIMOS PRIMER APELLIDO
+
+        laboratorista[0].apellido2 = pedir_cadena("SEGUNDO APELLIDO"); //PEDIMOS SEGUNDO APELLIDO
+
+        if ((strcmp(laboratorista[0].nombre2, "null") == 0))
+        { //NO TIENE SEGUNDO NOMBRE
+            sprintf(sql, "select cedula_lab, nom_lab, sexo_lab, correo, fecha_contratacion from laboratoristas where estado_lab= true and nom_lab ~* '^%s %s %s$';", laboratorista[0].nombre1, laboratorista[0].apellido1, laboratorista[0].apellido2);
+        }
+        else
+        {
+            sprintf(sql, "select cedula_lab, nom_lab, sexo_lab, correo, fecha_contratacion from laboratoristas where estado_lab = true and nom_lab ~* '^%s %s %s %s$';", laboratorista[0].nombre1, laboratorista[0].nombre2, laboratorista[0].apellido1, laboratorista[0].apellido2);
+        }
+        imprimir_laboratoristas(sql); //HACER LA BUSQUEDA E IMPRIMIR
+        break;
+    }
+
     printf("---------------------------------------------------\n\n\n");
+}
+
+void imprimir_laboratoristas(char sql[600])
+{
+
+    conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1"); //CREAMOS LA CONEXION
+
+    system("clear");
+
+    if (PQstatus(conn) != CONNECTION_BAD)
+    {
+        res = PQexec(conn, sql);
+        if (res != NULL && PQntuples(res) != 0)
+        { //SE ENCONTRARON PACIENTES
+            printf("---------------------------------------------------\n");
+            printf("\tLABORATORISTA ENCONTRADO\n");
+            printf("---------------------------------------------------\n\n");
+            //SE IMPRIMEN LOS PACIENTES ENCONTRADOS
+            for (int i = 0; i < PQntuples(res); i++)
+            {
+                for (int j = 0; j < PQnfields(res); j++) //hay 5 campos
+                {
+                    switch (j)
+                    {
+                    case 0:
+                        printf("     - > CEDULA : ");
+                        printf(ANSI_COLOR_BLUE "%s\n\n" ANSI_COLOR_RESET, PQgetvalue(res, i, j));
+                        break;
+                    case 1:
+                        printf("     - > NOMBRE : ");
+                        printf(ANSI_COLOR_BLUE "%s\n\n" ANSI_COLOR_RESET, PQgetvalue(res, i, j));
+                        break;
+                    case 2:
+                        printf("     - > SEXO : ");
+                        printf(ANSI_COLOR_BLUE "%s\n\n" ANSI_COLOR_RESET, PQgetvalue(res, i, j));
+                        break;
+                   
+                    case 3:
+                        printf("     - > CORREO : ");
+                        printf(ANSI_COLOR_BLUE "%s\n\n" ANSI_COLOR_RESET, PQgetvalue(res, i, j));
+                        break;
+                    case 4:
+                        printf("     - > FECHA DE REGISTRO : ");
+                        printf(ANSI_COLOR_BLUE "%s\n\n" ANSI_COLOR_RESET, PQgetvalue(res, i, j));
+                        break;
+                    }
+                }
+                PQclear(res);
+            }
+        }
+        else
+        { //NO SE ENCONTRARON PACIENTES
+            printf(ANSI_COLOR_RED "No se ha encontrado el laboratorista\n" ANSI_COLOR_RESET);
+        }
+    }
+    else
+    {
+        printf("No conecto esta mierda\n");
+    }
+
+    PQfinish(conn); //FINALIZAMOS LA CONEXION
 }
 void despedir_laboratoristas()
 {
@@ -1268,7 +1397,7 @@ void consultas_analisis()
         printf("---------------------------------------------------\n\n\n");
 }
 
-void hacer_select_analisis(char sql[tamano_maloc])
+void hacer_select_analisis(char sql[600])
 {
     int i, j;
     conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1"); //CREAMOS LA CONEXION
