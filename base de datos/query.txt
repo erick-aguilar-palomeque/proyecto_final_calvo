@@ -148,3 +148,21 @@ insert into historial_clinico (folio_p, cedula_lab, num_a, fecha, status) values
 insert into historial_clinico (folio_p, cedula_lab, num_a, fecha, status) values (10,'ABC2', 39, now(), 2);
 insert into historial_clinico (folio_p, cedula_lab, num_a, fecha, status) values (11,'ABC3', 40, now(), 3);
 insert into historial_clinico (folio_p, cedula_lab, num_a, fecha, status) values (9,'ABC3', 1, now(), 3);
+
+
+
+--DROP TABLES
+drop table resultados;
+drop table Det_atributos;
+drop table Det_a_atributos;
+drop table Det_a_materiales;
+drop table Inventario_reactivos;
+drop table Inventario_materiales;
+drop table Reactivos;
+drop table unidad_medida;
+drop table atributos;
+drop table Materiales;
+drop table historial_clinico;
+drop table analisis;
+drop table laboratoristas;
+drop table pacientes;

@@ -1636,58 +1636,64 @@ void agregar_atributos_analisis()
 {
     char sql[600];
     printf("|----------AGREGAR ATRIBUTOS  DE ANALISIS----------|\n");
-    struct
-    {
-        char *nombre;
-        char *descripcion;
-        double min;
-        double max;
-        int stockactual;
-    } atributos[1];
-    atributos[0].nombre = malloc(tamano_maloc);
-    atributos[0].descripcion = malloc(70);
 
-    int opc_confirmacion;
-    int salir = 0;
-
-    atributos[0].nombre = pedir_cadena("NOMBRE"); //PEDIMOS NOMBRE
-
-    printf("\nINGRESE UN VALOR PARA EL CAMPO [DESCRIPCION] : "); //PEDIMOS DESCRIPCION
-    scanf("%s", atributos[0].descripcion);
-
-    atributos[0].min = pedir_decimal("VALOR MINIMO DEL ATRIBUTO"); //PEDIMOS VALOR MINIMO
-
-    atributos[0].max = pedir_decimal("VALOR MAXIMO DEL ATRIBUTO"); //PEDIMOS VALOR MAXIMO
-
-    //INSERTAMOS
-    { //REGISTRAMOS EL MATERIAL
-        sprintf(sql, "insert into atributos (nom_atri, descrip_atri, min, max) values(UPPER('%s'), UPPER('%s'), %lf, %lf);", atributos[0].nombre, atributos[0].descripcion, atributos[0].min, atributos[0].max);
+    int num_reactivos_disponibles = consulta_rapida_enteros("select count(codi_barra_r) from reactivos where estado_r=true;");
+    if(num_reactivos_disponibles == 0){//SI NO HAY REACTIVOS
+        printf(ANSI_COLOR_RED "No hay atributos reactivos disponibles para agregar atributos, por favor añada reactivos antes\n" ANSI_COLOR_RESET);
     }
-
-    conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
-    if (PQstatus(conn) != CONNECTION_BAD)
-    {
-        res = PQexec(conn, sql);
-        if (PQresultStatus(res) == PGRES_COMMAND_OK)
+    else{//CUANDO ENTRA A ESTE ELSE QUIERE DECIR QUE SI HAY REACTIVOS
+        struct
         {
-            PQfinish(conn);
-            int num_atri = consulta_rapida_enteros("select max(num_atri) from atributos;"); //OBTENER EL ULTIMO ANALISIS INSERTADO
+            char *nombre;
+            char *descripcion;
+            double min;
+            double max;
+            int stockactual;
+        } atributos[1];
+        atributos[0].nombre = malloc(tamano_maloc);
+        atributos[0].descripcion = malloc(70);
 
-            pedir_reactivos_atributos(num_atri); //PEDIMOS LOS REACTIVOS QUE USA EL ATRIBUTO
+        int opc_confirmacion;
+        int salir = 0;
 
-            confirmar_reactivos_atributos(num_atri); //IMPRIMIR LO REGISTRADO Y CONFIRMAR
+        atributos[0].nombre = pedir_cadena("NOMBRE"); //PEDIMOS NOMBRE
+
+        printf("\nINGRESE UN VALOR PARA EL CAMPO [DESCRIPCION] : "); //PEDIMOS DESCRIPCION
+        scanf("%s", atributos[0].descripcion);
+
+        atributos[0].min = pedir_decimal("VALOR MINIMO DEL ATRIBUTO"); //PEDIMOS VALOR MINIMO
+
+        atributos[0].max = pedir_decimal("VALOR MAXIMO DEL ATRIBUTO"); //PEDIMOS VALOR MAXIMO
+
+        //INSERTAMOS
+        { //REGISTRAMOS EL MATERIAL
+            sprintf(sql, "insert into atributos (nom_atri, descrip_atri, min, max) values(UPPER('%s'), UPPER('%s'), %lf, %lf);", atributos[0].nombre, atributos[0].descripcion, atributos[0].min, atributos[0].max);
+        }
+
+        conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
+        if (PQstatus(conn) != CONNECTION_BAD)
+        {
+            res = PQexec(conn, sql);
+            if (PQresultStatus(res) == PGRES_COMMAND_OK)
+            {
+                PQfinish(conn);
+                int num_atri = consulta_rapida_enteros("select max(num_atri) from atributos;"); //OBTENER EL ULTIMO ANALISIS INSERTADO
+
+                pedir_reactivos_atributos(num_atri); //PEDIMOS LOS REACTIVOS QUE USA EL ATRIBUTO
+
+                confirmar_reactivos_atributos(num_atri); //IMPRIMIR LO REGISTRADO Y CONFIRMAR
+            }
+            else
+            {
+                PQfinish(conn);
+                printf(ANSI_COLOR_RED "No se ha podido registrar el atributo, notifique el error\n" ANSI_COLOR_RESET);
+            }
         }
         else
         {
-            PQfinish(conn);
-            printf(ANSI_COLOR_RED "No se ha podido registrar el atributo, notifique el error\n" ANSI_COLOR_RESET);
+            printf("La conexion no fue posible\n");
         }
     }
-    else
-    {
-        printf("La conexion no fue posible\n");
-    }
-
     printf("---------------------------------------------------\n\n\n");
 }
 int ver_si_algo_existe(int opc, int algo)
@@ -2080,49 +2086,65 @@ void confirmar_nuevo_analisis(int num_a)
 }
 void agregar_nuevo_analisis()
 {
-    char sql[600];
-    int opc_confirmacion;
-    struct
-    {
-        char *nombre;
-        int tiempo_realizacion;
-    } analisis[1];
-    analisis[0].nombre = malloc(tamano_maloc);
 
     printf("|--------------AGREGAR NUEVO ANALISIS--------------|\n");
 
-    analisis[0].nombre = pedir_cadena("NOMBRE DE ANALISIS"); //PIDO NOMBRE DE ANALISIS
+    int num_materiales = consulta_rapida_enteros("select count(codi_barra_m) from materiales where estado_m = true;");
+    int num_atributos = consulta_rapida_enteros("select count(num_atri) from atributos where estado_atri=true;");
 
-    analisis[0].tiempo_realizacion = pedir_entero("TIEMPO DE REALIZACION"); //PIDO TIEMPO DE REALIZACION
+    if(num_materiales == 0 && num_atributos == 0){//SI NO HAY ATRIBUTOS NI MATERIALES
+        printf(ANSI_COLOR_RED "No hay materiales y atributos para agregar un nuevo analisis, por favor añadalos antes\n" ANSI_COLOR_RESET);
+    }
+    else if(num_materiales == 0){//SI NO HAY MATERIALES
+        printf(ANSI_COLOR_RED "No hay materiales para agregar un nuevo analisis, por favor añada materiales primero\n" ANSI_COLOR_RESET);
+    }
+    else if(num_atributos == 0){//SI NO HAY ATRIBUTOS
+        printf(ANSI_COLOR_RED "No hay atributos para agregar un nuevo analisis, por favor añada atributos primero\n" ANSI_COLOR_RESET);
+    }
+    else{//CUANDO ENTRA A ESTE ELSE QUIERE DECIR QUE SI HAY ATRIBUTOS Y MATERIALES
+        char sql[600];
+        int opc_confirmacion;
+        struct
+        {
+            char *nombre;
+            int tiempo_realizacion;
+        } analisis[1];
+        analisis[0].nombre = malloc(tamano_maloc);
 
-    conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1"); //CREO UNA CONEXION 1
-    if (PQstatus(conn) != CONNECTION_BAD)
-    {
-        sprintf(sql, "insert into analisis(nom_a, tiempo_realizacion) values(UPPER('%s'), %d);", analisis[0].nombre, analisis[0].tiempo_realizacion);
-        res = PQexec(conn, sql);
-        if (PQresultStatus(res) == PGRES_COMMAND_OK) //SI INSERTÓ
-        {                                            //quitar printf
-            PQfinish(conn);                          //FINALIZO CONEXION 1
-            //printf(ANSI_COLOR_GREEN "Se ha registrado el analisis de manera exitosa\n" ANSI_COLOR_RESET);
-            int num_a = consulta_rapida_enteros("select max(num_a) from analisis;"); //OBTENER EL ULTIMO ANALISIS INSERTADO
 
-            pedir_materiales_analisis(num_a); //PEDIR LOS MATERIALES UTILIZADOS PARA EL ANALISIS
 
-            pedir_atributos_analisis(num_a); //PEDIR LOS ATRIBUTOS QUE CALCULAR EL ANALISIS
+        analisis[0].nombre = pedir_cadena("NOMBRE DE ANALISIS"); //PIDO NOMBRE DE ANALISIS
 
-            confirmar_nuevo_analisis(num_a); //CONFIRMAR REGISTRO DE ANALISIS Y RECHAZAR, ESO HARAS MAÑANA ERICK, TERMINALO, YA CASI QUEDÓ!!!!!!!!!!!!!!!!
+        analisis[0].tiempo_realizacion = pedir_entero("TIEMPO DE REALIZACION"); //PIDO TIEMPO DE REALIZACION
+
+        conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1"); //CREO UNA CONEXION 1
+        if (PQstatus(conn) != CONNECTION_BAD)
+        {
+            sprintf(sql, "insert into analisis(nom_a, tiempo_realizacion) values(UPPER('%s'), %d);", analisis[0].nombre, analisis[0].tiempo_realizacion);
+            res = PQexec(conn, sql);
+            if (PQresultStatus(res) == PGRES_COMMAND_OK) //SI INSERTÓ
+            {                                            //quitar printf
+                PQfinish(conn);                          //FINALIZO CONEXION 1
+                //printf(ANSI_COLOR_GREEN "Se ha registrado el analisis de manera exitosa\n" ANSI_COLOR_RESET);
+                int num_a = consulta_rapida_enteros("select max(num_a) from analisis;"); //OBTENER EL ULTIMO ANALISIS INSERTADO
+
+                pedir_materiales_analisis(num_a); //PEDIR LOS MATERIALES UTILIZADOS PARA EL ANALISIS
+
+                pedir_atributos_analisis(num_a); //PEDIR LOS ATRIBUTOS QUE CALCULAR EL ANALISIS
+
+                confirmar_nuevo_analisis(num_a); //CONFIRMAR REGISTRO DE ANALISIS Y RECHAZAR, ESO HARAS MAÑANA ERICK, TERMINALO, YA CASI QUEDÓ!!!!!!!!!!!!!!!!
+            }
+            else
+            {                   //quitar printf
+                PQfinish(conn); //FINALIZO CONEXION 1
+                printf(ANSI_COLOR_RED "No se ha podido registrar el analisis, notifique el error\n" ANSI_COLOR_RESET);
+            }
         }
         else
-        {                   //quitar printf
-            PQfinish(conn); //FINALIZO CONEXION 1
-            printf(ANSI_COLOR_RED "No se ha podido registrar el analisis, notifique el error\n" ANSI_COLOR_RESET);
+        {
+            printf("La conexion no fue posible\n");
         }
     }
-    else
-    {
-        printf("La conexion no fue posible\n");
-    }
-
     printf("---------------------------------------------------\n\n\n");
 }
 
