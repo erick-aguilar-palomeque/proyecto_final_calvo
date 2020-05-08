@@ -30,8 +30,8 @@ CREATE TABLE Historial_clinico(
 	folio_a serial PRIMARY KEY,
 	folio_p int REFERENCES Pacientes(folio_p),
 	num_a int REFERENCES Analisis(num_a),
-	status int,
-	fecha date,
+	status int default 1,
+	fecha date default now(),
 	cedula_lab text REFERENCES Laboratoristas(cedula_lab)	 
 );
 
