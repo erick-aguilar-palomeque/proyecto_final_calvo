@@ -28,3 +28,5 @@ grant select, insert,update, delete on table Det_atributos to administradores;
 
 grant select, insert,update on table historial_clinico to administradores;
 grant usage on historial_clinico_folio_a_seq to administradores;
+
+grant select, insert, update, delete on table resultados to administradores;
