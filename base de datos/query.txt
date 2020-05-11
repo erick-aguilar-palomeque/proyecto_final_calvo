@@ -87,7 +87,7 @@ CREATE TABLE Inventario_reactivos(
 	stock_anterior_r float,
 	cant_ocupada_r float,
 	stock_despues_r float,
-	folia_a int REFERENCES Historial_clinico(folio_a)
+	folio_a int REFERENCES Historial_clinico(folio_a)
 );
 
 CREATE TABLE Det_a_materiales(

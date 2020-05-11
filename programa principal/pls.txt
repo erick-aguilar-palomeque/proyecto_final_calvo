@@ -1,0 +1,165 @@
+--PL QUE TE DICE SI HAY REACTIVOS Y MATERIALES SUFICIENTES PARA REALIZAR EL ANALISIS
+create or replace function ver_si_hay_recursos_para_analisis(fnum_a int)
+returns int
+as 
+$$
+
+declare
+    material record;
+    atributo record;
+    reactivo record;
+    devolver int := 2;
+    comodin int;
+
+begin
+
+    for material in (select det_a_materiales.*, materiales.nom_m, materiales.stock_actual_m from det_a_materiales inner join materiales on 
+    det_a_materiales.codi_barra_m=materiales.codi_barra_m and det_a_materiales.num_a = fnum_a)
+    loop
+
+        if material.stock_actual_m >= material.cant_ocupada_m then
+            comodin = 1;
+            devolver = 1;
+        else
+            devolver = 0;
+            comodin = 0;
+        end if;
+
+        if comodin = 0 then
+            exit;
+        end if;
+
+        --raise notice 'num_a: % cons: % cod: % cant: % nom: % stock: %',material.num_a, material.cons_det_a_materiales, material.codi_barra_m, material.cant_ocupada_m, material.nom_m, material.stock_actual_m;
+
+    end loop;
+
+    if devolver = 1 then
+        comodin:=2;
+        for atributo in (select * from det_a_atributos where num_a = fnum_a)    
+        loop
+            --raise notice 'NUEVO ATRIBUTO';
+            --raise notice ' ';
+
+
+            for reactivo in (select det_atributos.*, reactivos.nom_r, reactivos.stock_actual_r from det_atributos inner join reactivos on det_atributos.codi_barra_r = reactivos.codi_barra_r and det_atributos.num_atri = atributo.num_atri) 
+            loop
+
+                --raise notice 'num_atri: % cant: % nom: % stock: %',reactivo.num_atri,reactivo.cant_ocupada_r, reactivo.nom_r, reactivo.stock_actual_r;
+                --raise notice '  ';
+
+                if reactivo.stock_actual_r >= reactivo.cant_ocupada_r then
+                    comodin = 1;
+                    devolver = 1;
+                else
+                    comodin = 0;
+                    devolver = 0;
+                end if;
+
+                if comodin = 0 then
+                    exit;
+                end if;
+            end loop;
+
+        if comodin = 0 then
+            exit;
+        end if;
+
+        end loop;        
+    end if;
+
+    
+
+
+
+    return devolver;
+end;
+
+$$
+Language plpgsql;
+
+
+
+--PL QUE INSERTA LOS INVENTARIOS RECIEN SOLICITAS UN ANALISIS
+create or replace function inserta_inventarios(ffolio_a int, fnum_a int)
+returns void
+as
+$$
+
+declare
+    material record;
+    atributo record;
+    reactivo record;
+    cant_ocupada_m int;
+    cant_ocupada_r float;
+    stock_antes_m int;
+    stock_antes_r float;
+
+begin
+
+    for material in (select det_a_materiales.*, materiales.* from det_a_materiales inner join materiales on 
+    det_a_materiales.codi_barra_m=materiales.codi_barra_m and det_a_materiales.num_a = fnum_a)
+    loop
+        insert into inventario_materiales (codi_barra_m, stock_anterior_m, stock_despues_m, cant_ocupada_m, folio_a) values(material.codi_barra_m, material.stock_actual_m, material.stock_actual_m - material.cant_ocupada_m, material.cant_ocupada_m, ffolio_a);
+    end loop;
+
+    for atributo in (select * from det_a_atributos where num_a = fnum_a)    
+    loop
+
+        for reactivo in (select det_atributos.*, reactivos.* from det_atributos inner join reactivos on det_atributos.codi_barra_r = reactivos.codi_barra_r and det_atributos.num_atri = atributo.num_atri) 
+        loop
+        insert into inventario_reactivos (codi_barra_r, stock_anterior_r, stock_despues_r, cant_ocupada_r, folio_a) values(reactivo.codi_barra_r, reactivo.stock_actual_r, reactivo.stock_actual_r - reactivo.cant_ocupada_r, reactivo.cant_ocupada_r, ffolio_a);
+
+        end loop;
+    end loop;
+
+end;
+
+$$
+Language plpgsql;
+
+
+--PL QUE FUNCIONA CON EL TRIGGER TR_ACTUALIZAR_STOCK_M
+
+create or replace function f_actualizar_stock_m()
+returns trigger 
+as
+$$
+
+declare 
+    nuevo_stock int = new.stock_despues_m;
+begin
+
+    update materiales set stock_actual_m = nuevo_stock where codi_barra_m = new.codi_barra_m;
+    return new;
+end;
+
+$$
+Language plpgsql;
+
+create trigger tr_actualizar_stock_m before insert on inventario_materiales
+for each row 
+execute procedure f_actualizar_stock_m();
+
+
+
+--PL QUE FUNCIONA CON EL TRIGGER TR_ACTUALIZAR_STOCK_R
+
+create or replace function f_actualizar_stock_r()
+returns trigger 
+as
+$$
+
+declare 
+    nuevo_stock float = new.stock_despues_r;
+begin
+
+    update reactivos set stock_actual_r = nuevo_stock where codi_barra_r = new.codi_barra_r;
+    return new;
+end;
+
+$$
+Language plpgsql;
+
+create trigger tr_actualizar_stock_r before insert on inventario_reactivos
+for each row 
+execute procedure f_actualizar_stock_r();
