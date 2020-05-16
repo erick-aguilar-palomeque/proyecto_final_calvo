@@ -136,6 +136,11 @@ end;
 $$
 Language plpgsql;
 
+
+
+
+
+
 create trigger tr_actualizar_stock_m before insert on inventario_materiales
 for each row 
 execute procedure f_actualizar_stock_m();
@@ -160,6 +165,119 @@ end;
 $$
 Language plpgsql;
 
+
+
+
+
+
+
 create trigger tr_actualizar_stock_r before insert on inventario_reactivos
 for each row 
 execute procedure f_actualizar_stock_r();
+
+
+--PL QUE RETORNA 1 SI UN ANALISIS SE PUEDE DAR DE BAJA O 0 SI NO SE PUEDE, SE PUEDE DAR DE BAJA SOLO SI SE HAN ENTREGADO TODOS LOS ANALISIS
+
+create or replace function f_baja_analisis(fnum_a int)
+returns int 
+as
+$$
+
+declare
+    n_analisis_totales int := (select count(folio_a) from historial_clinico where num_a = fnum_a);
+    n_analisis_entregados int := (select count(folio_a) from historial_clinico where status = 3 and num_a = fnum_a);
+    devolver int;
+begin
+
+    if n_analisis_totales = n_analisis_entregados then
+        devolver = 1;
+        update analisis set estado_a = false where num_a = fnum_a;
+    else
+        devolver = 0;
+    end if;
+
+
+
+    return devolver;
+
+end;
+
+$$
+Language plpgsql;
+
+
+
+
+
+--PL QUE FUNCIONA CON TRIGGER TR_UPDATE_HISTORIAL, INSERTA LAS FECHAS DE REALIZACION Y DE ENTREGADO
+
+create or replace function f_insertar_fechas_historial()
+returns trigger 
+as
+$$
+
+declare
+
+begin
+
+    if new.status = 2 then
+        new.fecha_realizacion := now(); 
+    end if;
+
+    if new.status = 3 then
+        new.fecha_entrega := now(); 
+    end if;
+
+
+return new;
+end;
+
+$$
+Language plpgsql;
+
+
+
+
+
+
+
+
+
+
+
+create trigger tr_update_historial before update on historial_clinico
+for each row 
+execute procedure f_insertar_fechas_historial(); 
+
+
+--PL QUE RETORNA 1 SI SE PUEDE DAR DE BAJA UN LABORATORISTA Y 0 SI NO SE PUEDE, SE PUEDE SIEMPRE Y CUANDO EL LABORATORISTA YA ESTE INVOLUCRADO EN UN ANALISIS SOLICITADO
+
+create or replace function f_baja_laboratoristas(fcedula_lab text)
+returns int
+as
+$$
+
+declare 
+    devolver int;
+    n_analisis_solicitados int := (select count(folio_a) from historial_clinico where status = 1 and cedula_lab = fcedula_lab);
+
+begin
+    --raise notice 'n: %',n_analisis_solicitados;
+    if n_analisis_solicitados = 0 then
+        devolver = 1;
+        update laboratoristas set estado_lab = false where cedula_lab = fcedula_lab;
+    else
+        devolver = 0;
+    end if;
+
+    return devolver;
+end;
+
+$$
+Language plpgsql;
+
+
+
+
+
+

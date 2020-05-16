@@ -62,6 +62,8 @@ int ver_si_algo_esta_repetido();
 int ver_si_algo_existe();
 void confirmar_nuevo_analisis();
 void agregar_nuevo_analisis();
+void ver_catalogo_analisis();
+void baja_analisis();
 
 char *menu_materiales();
 void alta_materiales();
@@ -180,13 +182,21 @@ int main(int argc, char *argv[])
                     break;
                 case 8:
                     system("clear");
+                    ver_catalogo_analisis();
+                    break;
+                case 9:
+                    system("clear");
+                    baja_analisis();
+                    break;
+                case 10:
+                    system("clear");
                     break;
                 default:
                     system("clear");
                     printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET);
                     break;
                 }
-            } while (opc_analisis != 8);
+            } while (opc_analisis != 10);
             break;
 
         case 4:
@@ -1325,6 +1335,40 @@ void imprimir_laboratoristas(char sql[600])
 void despedir_laboratoristas()
 {
     printf("|--------------DESPEDIR LABORATORISTA--------------|\n");
+    char* cedula = malloc(tamano_maloc);
+    char sql[600];
+    printf("\nINGRESE UN VALOR PARA EL CAMPO [CEDULA LABORATORISTA A ELIMINAR] : "); //PEDIMOS CEDULA
+    scanf("%s", cedula);
+    
+    sprintf(sql, "select cedula_lab from laboratoristas where estado_lab = true and cedula_lab ~* '^%s$';", cedula); //comparar cadenas usar expresion regular
+    
+    system("clear");
+    conn5 = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1"); //CREAMOS LA CONEXION
+    if (PQstatus(conn5) != CONNECTION_BAD)
+    {
+        res = PQexec(conn5, sql);
+        if (res != NULL && PQntuples(res) != 0)
+        { //SE ENCONTRÓ LABORATORISTA
+            strcpy(cedula, PQgetvalue(res, 0, 0));//GUARDO LA CEDULA EN MAYUSCULAS
+            sprintf(sql, "select f_baja_laboratoristas('%s');",cedula);
+            int despedir = consulta_rapida_enteros(sql);
+            if(despedir == 0){
+                printf(ANSI_COLOR_RED "El laboratorista no puede ser despedido aun, debe terminar con sus pendientes\n" ANSI_COLOR_RESET);
+            }
+            else{
+                printf(ANSI_COLOR_GREEN "El laboratorista ha sido despedido exitosamente\n" ANSI_COLOR_RESET);
+            }
+            
+        }
+        else
+        { //NO SE ENCONTRÓ LABORATORISTA
+            printf(ANSI_COLOR_RED "No se ha encontrado el laboratorista\n" ANSI_COLOR_RESET);
+        }
+        PQclear(res);
+    }
+    PQfinish(conn5);
+
+    
     printf("---------------------------------------------------\n\n\n");
 }
 
@@ -1339,7 +1383,9 @@ char *menu_analisis()
     printf("\n[5] CONSULTAS ANALISIS");
     printf("\n[6] AGREGAR ATRIBUTOS DE ANALISIS");
     printf("\n[7] AGREGAR UN NUEVO ANALISIS");
-    printf("\n[8] VOLVER AL MENU PRINCIPAL");
+    printf("\n[8] VER CATALOGO ANALISIS");
+    printf("\n[9] BAJA ANALISIS DEL CATALOGO");
+    printf("\n[10] VOLVER AL MENU PRINCIPAL");
     printf("\n---------------------------------------------------\n");
     printf("Ingrese la opcion deseada : ");
     scanf("%s", opc);
@@ -1396,6 +1442,7 @@ int ver_si_cadena_existe(int opc, char cadena[200])
             sprintf(sql, "select cedula_lab from laboratoristas where cedula_lab ~* '^%s$' and estado_lab = true;", cadena);
             break;
         }
+        //printf("%s\n",sql);
         res = PQexec(conn, sql);                //EJECUTA LA INSTRUCCION
         if (res != NULL && PQntuples(res) != 0) //SI EL SELECT DEVOLVIÓ ALGO
         {                                       //SI ENCONTRÓ ALGO
@@ -1540,17 +1587,22 @@ void solicitar_analisis()
                         }
 
                         sprintf(sql, "select nom_p from pacientes where folio_p = %d;", folio_paciente);
-                        char *nom_paciente = consulta_rapida_cadenas(sql);
+                        char *nom_paciente = malloc(tamano_maloc);
+                        strcpy(nom_paciente, consulta_rapida_cadenas(sql));
+                       //printf("%s\n",sql);
 
                         sprintf(sql, "select nom_lab from laboratoristas where cedula_lab ~* '^%s$';", cedula);
-                        char *nom_lab = consulta_rapida_cadenas(sql);
+                        char *nom_lab = malloc(tamano_maloc);
+                        strcpy(nom_lab, consulta_rapida_cadenas(sql));
+                        //nom_lab = consulta_rapida_cadenas(sql);
 
                         sprintf(sql, "select nom_a from analisis where num_a = %d;", num_analisis);
-                        printf("%s\n", sql);
-                        char *nom_analisis = consulta_rapida_cadenas(sql);
+                        //printf("%s\n", sql);
+                        char *nom_analisis = malloc(tamano_maloc);
+                        strcpy(nom_analisis, consulta_rapida_cadenas(sql));
 
                         //IMPRIMIR LOS VALORES CAPTURADOS
-                        system("clear");
+                        //system("clear");
                         printf("---------------------------------------------------\n");
                         printf("\tDATOS RECOPILADOS\n");
                         printf("---------------------------------------------------\n");
@@ -1878,6 +1930,10 @@ void buscar_analisis()
                             break;
                         case 8: printf("\t - > FECHA SOLICITUD : "); printf(ANSI_COLOR_BLUE "%s\n\n" ANSI_COLOR_RESET,PQgetvalue(res, i, j));
                             break;
+                        case 9: printf("\t - > FECHA REALIZACION : "); printf(ANSI_COLOR_BLUE "%s\n\n" ANSI_COLOR_RESET,PQgetvalue(res, i, j));
+                            break;
+                        case 10: printf("\t - > FECHA ENTREGA: "); printf(ANSI_COLOR_BLUE "%s\n\n" ANSI_COLOR_RESET,PQgetvalue(res, i, j));
+                            break;
                         }
                     }
                     
@@ -1911,7 +1967,7 @@ void consultas_analisis()
         }
         else{
             puts(ANSI_COLOR_BLUE "FOLIO ANALISIS\tFOLIO PACIENTE\tNUMERO ANALISIS\t\tFECHA\t\tCEDULA LABORATORISTA" ANSI_COLOR_RESET);
-            sprintf(sql, "select folio_a, folio_p, num_a,fecha, cedula_lab  from historial_clinico where status = 1;");
+            sprintf(sql, "select folio_a, folio_p, num_a,fecha_solicitud, cedula_lab  from historial_clinico where status = 1;");
             hacer_select_analisis(sql); //HACER SELECT E IMPRIMIR
         }
         break;
@@ -1929,7 +1985,7 @@ void consultas_analisis()
         }
         else{
             puts(ANSI_COLOR_BLUE "FOLIO ANALISIS\tFOLIO PACIENTE\tNUMERO ANALISIS\t\tFECHA\t\tCEDULA LABORATORISTA" ANSI_COLOR_RESET);
-            sprintf(sql, "select folio_a, folio_p, num_a,fecha, cedula_lab  from historial_clinico where status = 2;");
+            sprintf(sql, "select folio_a, folio_p, num_a,fecha_solicitud, cedula_lab  from historial_clinico where status = 2;");
             hacer_select_analisis(sql); //HACER SELECT E IMPRIMIR
         }
         break;
@@ -1946,7 +2002,7 @@ void consultas_analisis()
         }
         else{
             puts(ANSI_COLOR_BLUE "FOLIO ANALISIS\tFOLIO PACIENTE\tNUMERO ANALISIS\t\tFECHA\t\tCEDULA LABORATORISTA" ANSI_COLOR_RESET);
-            sprintf(sql, "select folio_a, folio_p, num_a,fecha, cedula_lab  from historial_clinico where status = 3;");
+            sprintf(sql, "select folio_a, folio_p, num_a,fecha_solicitud, cedula_lab  from historial_clinico where status = 3;");
             hacer_select_analisis(sql); //HACER SELECT E IMPRIMIR
         }
         break;
@@ -2718,6 +2774,52 @@ void agregar_nuevo_analisis()
         }
     }
     printf("---------------------------------------------------\n\n\n");
+}
+void ver_catalogo_analisis(){
+    system("clear");
+    printf("---------------------------------------------------\n");
+    printf("\tCATALOGO ANALISIS\n");
+    printf("---------------------------------------------------\n");
+    printf(ANSI_COLOR_BLUE "NUMERO ANALISIS\t\tNOMBRE ANALISIS\t   TIEMPO REALIZACION\n" ANSI_COLOR_RESET);
+    conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
+    char sql[600];
+    if(PQstatus(conn) != CONNECTION_BAD){
+        res = PQexec(conn, "select * from v_catalogo_analisis;");
+        if(res != NULL && PQntuples(res) != 0){
+            for(int i=0; i < PQntuples(res); i++){
+                printf("\t%s\t\t%s\t\t\t%s\n",PQgetvalue(res, i, 0),PQgetvalue(res, i, 1),PQgetvalue(res, i, 2));
+            }
+
+        }
+        PQclear(res);
+    }
+    PQfinish(conn);
+    printf("---------------------------------------------------\n\n\n");
+
+}
+void baja_analisis(){
+    printf("|------------------BAJA  ANALISIS------------------|\n");
+    int num_a = pedir_entero("NUMERO DE ANALISIS A ELIMINAR");
+
+    num_a = ver_si_algo_existe(4, num_a);
+    system("clear");
+
+    if(num_a == -1){
+        printf(ANSI_COLOR_RED "El analisis especificado no existe\n" ANSI_COLOR_RESET);
+    }
+    else{//SI ENTRA AL ELSE QUIERE DECIR QUE QUE SI EXISTE
+        char sql[600];
+        sprintf(sql, "select f_baja_analisis(%d);",num_a);
+        int saber_si_se_borro = consulta_rapida_enteros(sql);
+        if(saber_si_se_borro == 1){
+            printf(ANSI_COLOR_GREEN "El analisis ha sido dado de baja correctamente\n" ANSI_COLOR_RESET);
+        }
+        else{//SI ENTRA AL ELSE QUIERE DECIR QUE NO SE PUEDE BORRAR PORQUE NO TODOS HAN SIDO ENTREGADOS AUN
+            printf(ANSI_COLOR_RED "El analisis no ha podido ser dado de baja porque aun no se entregan todos los analisis de este tipo\n" ANSI_COLOR_RESET);
+        }
+    }
+    printf("---------------------------------------------------\n\n\n");
+
 }
 
 char *menu_materiales()

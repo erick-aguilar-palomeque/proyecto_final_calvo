@@ -31,7 +31,9 @@ CREATE TABLE Historial_clinico(
 	folio_p int REFERENCES Pacientes(folio_p),
 	num_a int REFERENCES Analisis(num_a),
 	status int default 1,
-	fecha date default now(),
+	fecha_solicitud date default now(),
+	fecha_realizacion date,
+	fecha_entrega date,
 	cedula_lab text REFERENCES Laboratoristas(cedula_lab)	 
 );
 

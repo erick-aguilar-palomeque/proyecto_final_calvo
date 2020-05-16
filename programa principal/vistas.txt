@@ -1,2 +1,5 @@
 --VISTA QUE MUESTRA INFORMACION DETALLADA DEL ANALISIS
-create view v_buscar_analisis as (select historial_clinico.folio_a, pacientes.folio_p, pacientes.nom_p, analisis.num_a, analisis.nom_a, laboratoristas.cedula_lab, laboratoristas.nom_lab, historial_clinico.status, historial_clinico.fecha from historial_clinico inner join analisis on historial_clinico.num_a=analisis.num_a inner join pacientes on historial_clinico.folio_p=pacientes.folio_p inner join laboratoristas on historial_clinico.cedula_lab=laboratoristas.cedula_lab);
+create view v_buscar_analisis as (select historial_clinico.folio_a, pacientes.folio_p, pacientes.nom_p, analisis.num_a, analisis.nom_a, laboratoristas.cedula_lab, laboratoristas.nom_lab, historial_clinico.status, historial_clinico.fecha_solicitud, historial_clinico.fecha_realizacion ,historial_clinico.fecha_entrega from historial_clinico inner join analisis on historial_clinico.num_a=analisis.num_a inner join pacientes on historial_clinico.folio_p=pacientes.folio_p inner join laboratoristas on historial_clinico.cedula_lab=laboratoristas.cedula_lab);
+
+--VISTA QUE MUESTRA EL CATALOGO DE LOS ANALISIS DISPONIBLES
+create view v_catalogo_analisis as select num_a, nom_a, tiempo_realizacion from analisis where estado_a = true;
