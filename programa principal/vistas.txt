@@ -3,3 +3,6 @@ create view v_buscar_analisis as (select historial_clinico.folio_a, pacientes.fo
 
 --VISTA QUE MUESTRA EL CATALOGO DE LOS ANALISIS DISPONIBLES
 create view v_catalogo_analisis as select num_a, nom_a, tiempo_realizacion from analisis where estado_a = true;
+
+--VISTA QUE MUESTRA EL CATALOGO DE ATRIBUTOS DISPONIBLES
+create view v_catalogo_atributos as (select num_atri, nom_atri, min, max from atributos where estado_atri=true);

@@ -340,3 +340,30 @@ begin
 end;
 $$
 Language plpgsql;
+
+
+
+--PL QUE DEVUELVE 1 SI EL ATRIBUTO PUEDE SER ELIMINADO Y 0 SI NO, SE PUEDE ELIMINAR CUANDO YA NO ES UTILIZADO EN NINGUN ANALISIS DISPONIBLE
+
+create or replace function f_baja_atributos(fnum_atri int)
+returns int
+as 
+$$
+
+declare
+    n_atributos int := (select count(d.num_atri) from det_a_atributos d inner join analisis a on a.num_a = d.num_a and d.num_atri = fnum_atri and a.estado_a = true);
+    devolver int;
+begin
+    if n_atributos = 0 then
+        devolver = 1;
+        update atributos set estado_atri = false where num_atri = fnum_atri;
+    else    
+        devolver = 0;
+
+    end if;
+
+    return devolver;
+
+end;
+$$
+Language plpgsql;

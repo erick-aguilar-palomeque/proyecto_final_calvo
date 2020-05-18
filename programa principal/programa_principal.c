@@ -64,6 +64,8 @@ void confirmar_nuevo_analisis();
 void agregar_nuevo_analisis();
 void ver_catalogo_analisis();
 void baja_analisis();
+void ver_catalogo_atributos();
+void baja_atributos();
 
 char *menu_materiales();
 void alta_materiales();
@@ -190,13 +192,21 @@ int main(int argc, char *argv[])
                     break;
                 case 10:
                     system("clear");
+                    ver_catalogo_atributos();
+                    break;
+                case 11:
+                    system("clear");
+                    baja_atributos();
+                    break;
+                case 12:
+                    system("clear");
                     break;
                 default:
                     system("clear");
                     printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET);
                     break;
                 }
-            } while (opc_analisis != 10);
+            } while (opc_analisis != 12);
             break;
 
         case 4:
@@ -1385,7 +1395,9 @@ char *menu_analisis()
     printf("\n[7] AGREGAR UN NUEVO ANALISIS");
     printf("\n[8] VER CATALOGO ANALISIS");
     printf("\n[9] BAJA ANALISIS DEL CATALOGO");
-    printf("\n[10] VOLVER AL MENU PRINCIPAL");
+    printf("\n[10] VER CATALOGO ATRIBUTOS");
+    printf("\n[11] BAJA ATRIBUTOS");
+    printf("\n[12] VOLVER AL MENU PRINCIPAL");
     printf("\n---------------------------------------------------\n");
     printf("Ingrese la opcion deseada : ");
     scanf("%s", opc);
@@ -2841,6 +2853,70 @@ void baja_analisis(){
     printf("---------------------------------------------------\n\n\n");
 
 }
+void ver_catalogo_atributos(){
+    system("clear");
+    printf("---------------------------------------------------\n");
+    printf("\tCATALAGO ATRIBUTOS\n");
+    printf("---------------------------------------------------\n");
+    int n_atributos = consulta_rapida_enteros("select count(num_atri) from atributos where estado_atri=true ;");
+
+    if(n_atributos == 0){
+        printf(ANSI_COLOR_RED "No hay atributos disponibles\n" ANSI_COLOR_RESET);
+    }
+    else{//SI ENTRA AL ELSE QUIERE DECIR QUE SI HAY ATRIBUTOS DISPONIBLES
+        printf(ANSI_COLOR_BLUE "NUMERO ATRIBUTO\t\tNOMBRE ATRIBUTO\t\tVALOR MINIMO\t\tVALOR MAXIMO\n" ANSI_COLOR_RESET);
+        conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
+        char sql[600];
+        if(PQstatus(conn) != CONNECTION_BAD){
+            res = PQexec(conn, "select * from v_catalogo_atributos;");
+            if(res != NULL && PQntuples(res) != 0){
+                for(int i=0; i < PQntuples(res); i++){
+                    printf("       %s\t\t   %s\t\t\t%s\t\t\t%s\n",PQgetvalue(res, i, 0),PQgetvalue(res, i, 1),PQgetvalue(res, i, 2),PQgetvalue(res, i, 3));
+                }
+
+            }
+            PQclear(res);
+        }
+        PQfinish(conn);
+
+    }
+    printf("---------------------------------------------------\n\n\n");
+}
+void baja_atributos(){
+    system("clear");
+    printf("|----------------BAJA  ATRIBUTOS-----------------|\n");
+    int n_atributos = consulta_rapida_enteros("select count(num_atri) from atributos where estado_atri=true ;");
+
+    if(n_atributos == 0){
+        system("clear");
+        printf(ANSI_COLOR_RED "No hay atributos disponibles para dar de baja\n" ANSI_COLOR_RESET);
+    }
+    else{
+        int num_atri = pedir_entero("NUMERO DE ATRIBUTO A ELIMINAR");
+
+        num_atri = ver_si_algo_existe(2, num_atri);
+        system("clear");
+
+        if(num_atri == -1){
+            printf(ANSI_COLOR_RED "El atributo especificado no existe\n" ANSI_COLOR_RESET);
+        }
+        else{//SI ENTRA AL ELSE QUIERE DECIR QUE QUE SI EXISTE
+            char sql[600];
+            sprintf(sql, "select f_baja_atributos(%d);",num_atri);
+            int saber_si_se_borro = consulta_rapida_enteros(sql);
+            if(saber_si_se_borro == 1){
+                printf(ANSI_COLOR_GREEN "El atributo ha sido dado de baja correctamente\n" ANSI_COLOR_RESET);
+            }
+            else{//SI ENTRA AL ELSE QUIERE DECIR QUE NO SE PUEDE BORRAR PORQUE NO TODOS HAN SIDO ENTREGADOS AUN
+                printf(ANSI_COLOR_RED "El atributo no ha podido ser dado de baja porque aun es ocupado en analisis disponibles\n" ANSI_COLOR_RESET);
+            }
+        }
+
+    }
+    
+    printf("---------------------------------------------------\n\n\n");
+
+}
 
 char *menu_materiales()
 {
@@ -2958,6 +3034,7 @@ void baja_materiales()
     }
     printf("---------------------------------------------------\n\n\n");
 }
+
 
 char *menu_reactivos()
 {
