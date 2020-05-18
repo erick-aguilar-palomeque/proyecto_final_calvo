@@ -281,3 +281,62 @@ Language plpgsql;
 
 
 
+
+
+--PL QUE REGRESA 1 SI SE PUEDE DAR DE BAJA UN MATERIAL Y 0 SI NO SE PUEDE, SE PUEDE CUANDO NINGUN ANALISIS DISPONIBLE LO UTILIZA
+
+create or replace function f_baja_materiales(fcodi_barra_m int)
+returns int 
+as
+$$
+
+declare
+    --n_materiales tiene el numero de veces que ese material se esta utilizando en los analisis disponibles
+    n_materiales int:=(select count(d.codi_barra_m) from det_a_materiales d inner join analisis a on a.num_a = d.num_a and d.codi_barra_m = fcodi_barra_m and a.estado_a = true);
+    devolver int;
+
+begin
+
+    if n_materiales = 0 then
+        devolver = 1;
+        update materiales set estado_m = false where codi_barra_m = fcodi_barra_m;
+    else    
+        devolver = 0;
+
+    end if;
+
+    return devolver;
+end;
+
+
+$$
+Language plpgsql;
+
+
+
+--PL QUE DEVUELVE 1 SI EL REACTIVO PUEDE SER ELIMINADO Y 0 SI NO, SE PUEDE ELIMINAR CUANDO NO SE ESTE USANDO EN ALGUN ATRIBUTO DISPONIBLE
+
+create or replace function f_baja_reactivos(fcodi_barra_r int)
+returns int
+as
+$$
+
+declare
+    n_reactivos int := (select count(da.codi_barra_r) from det_atributos da inner join atributos a on da.num_atri = a.num_atri and da.codi_barra_r = fcodi_barra_r and a.estado_atri = true);
+    devolver int;
+
+begin
+    if n_reactivos = 0 then
+        devolver = 1;
+        update reactivos set estado_r = false where codi_barra_r = fcodi_barra_r;
+    else    
+        devolver = 0;
+
+    end if;
+
+    return devolver;
+
+
+end;
+$$
+Language plpgsql;

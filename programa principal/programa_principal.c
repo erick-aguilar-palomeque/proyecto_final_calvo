@@ -2047,7 +2047,7 @@ void pedir_reactivos_atributos(int num_atri)
             //--------------------------------------------------------------------IMPRIMIR LOS REACTIVOS DISPONIBLES
             if (PQstatus(conn) != CONNECTION_BAD)
             {
-                res = PQexec(conn, "select codi_barra_r, nom_r from reactivos;");
+                res = PQexec(conn, "select codi_barra_r, nom_r from reactivos where estado_r = true;");
                 if (res != NULL && PQntuples(res) != 0)
                 {
                     for (int i = 0; i < PQntuples(res); i++)
@@ -2344,7 +2344,7 @@ int ver_si_algo_existe(int opc, int algo)
         case 7:
             sprintf(sql, "select folio_a from historial_clinico where folio_a = %d;", algo);
             break;
-        }
+        }//printf("%s\n",sql);
         res = PQexec(conn, sql); //EJECUTA LA INSTRUCCION
         //printf("%s\n",sql);
         if (res != NULL && PQntuples(res) != 0)     //SI EL SELECT DEVOLVIÓ ALGO
@@ -2409,7 +2409,7 @@ void pedir_materiales_analisis(int num_a)
             //--------------------------------------------------------------------IMPRIMIR LOS MATERIALES DISPONIBLES
             if (PQstatus(conn) != CONNECTION_BAD)
             {
-                res = PQexec(conn, "select codi_barra_m, nom_m from materiales;");
+                res = PQexec(conn, "select codi_barra_m, nom_m from materiales where estado_m=true;");
                 if (res != NULL && PQntuples(res) != 0)
                 {
                     for (int i = 0; i < PQntuples(res); i++)
@@ -2498,7 +2498,7 @@ void pedir_atributos_analisis(int num_a)
             //--------------------------------------------------------------------IMPRIMIR LOS ATRIBUTOS DISPONIBLES
             if (PQstatus(conn) != CONNECTION_BAD)
             {
-                res = PQexec(conn, "select num_atri, nom_atri from atributos;");
+                res = PQexec(conn, "select num_atri, nom_atri from atributos where estado_atri = true;");
                 if (res != NULL && PQntuples(res) != 0)
                 {
                     for (int i = 0; i < PQntuples(res); i++)
@@ -2780,43 +2780,63 @@ void ver_catalogo_analisis(){
     printf("---------------------------------------------------\n");
     printf("\tCATALOGO ANALISIS\n");
     printf("---------------------------------------------------\n");
-    printf(ANSI_COLOR_BLUE "NUMERO ANALISIS\t\tNOMBRE ANALISIS\t   TIEMPO REALIZACION\n" ANSI_COLOR_RESET);
-    conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
-    char sql[600];
-    if(PQstatus(conn) != CONNECTION_BAD){
-        res = PQexec(conn, "select * from v_catalogo_analisis;");
-        if(res != NULL && PQntuples(res) != 0){
-            for(int i=0; i < PQntuples(res); i++){
-                printf("\t%s\t\t%s\t\t\t%s\n",PQgetvalue(res, i, 0),PQgetvalue(res, i, 1),PQgetvalue(res, i, 2));
-            }
+    int n_analisis = consulta_rapida_enteros("select count(num_a) from analisis where estado_a = true;");
 
-        }
-        PQclear(res);
+    if(n_analisis == 0){
+        system("clear");
+        printf(ANSI_COLOR_RED "No hay analisis disponibles\n" ANSI_COLOR_RESET);
     }
-    PQfinish(conn);
+    else
+    {//SI ENTRA AL ELSE QUIERE DECIR QUE SI HAY ANALISIS DISPONIBLES
+        
+        printf(ANSI_COLOR_BLUE "NUMERO ANALISIS\t\tNOMBRE ANALISIS\t   TIEMPO REALIZACION\n" ANSI_COLOR_RESET);
+        conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
+        char sql[600];
+        if(PQstatus(conn) != CONNECTION_BAD){
+            res = PQexec(conn, "select * from v_catalogo_analisis;");
+            if(res != NULL && PQntuples(res) != 0){
+                for(int i=0; i < PQntuples(res); i++){
+                    printf("\t%s\t\t%s\t\t\t%s\n",PQgetvalue(res, i, 0),PQgetvalue(res, i, 1),PQgetvalue(res, i, 2));
+                }
+
+            }
+            PQclear(res);
+        }
+        PQfinish(conn);
+        
+    }
     printf("---------------------------------------------------\n\n\n");
 
 }
 void baja_analisis(){
     printf("|------------------BAJA  ANALISIS------------------|\n");
-    int num_a = pedir_entero("NUMERO DE ANALISIS A ELIMINAR");
+    int n_analisis = consulta_rapida_enteros("select count(num_a) from analisis where estado_a = true;");
 
-    num_a = ver_si_algo_existe(4, num_a);
-    system("clear");
-
-    if(num_a == -1){
-        printf(ANSI_COLOR_RED "El analisis especificado no existe\n" ANSI_COLOR_RESET);
+    if(n_analisis == 0){
+        system("clear");
+        printf(ANSI_COLOR_RED "No hay analisis disponibles para dar de baja\n" ANSI_COLOR_RESET);
     }
-    else{//SI ENTRA AL ELSE QUIERE DECIR QUE QUE SI EXISTE
-        char sql[600];
-        sprintf(sql, "select f_baja_analisis(%d);",num_a);
-        int saber_si_se_borro = consulta_rapida_enteros(sql);
-        if(saber_si_se_borro == 1){
-            printf(ANSI_COLOR_GREEN "El analisis ha sido dado de baja correctamente\n" ANSI_COLOR_RESET);
+    else{
+        int num_a = pedir_entero("NUMERO DE ANALISIS A ELIMINAR");
+
+        num_a = ver_si_algo_existe(4, num_a);
+        system("clear");
+
+        if(num_a == -1){
+            printf(ANSI_COLOR_RED "El analisis especificado no existe\n" ANSI_COLOR_RESET);
         }
-        else{//SI ENTRA AL ELSE QUIERE DECIR QUE NO SE PUEDE BORRAR PORQUE NO TODOS HAN SIDO ENTREGADOS AUN
-            printf(ANSI_COLOR_RED "El analisis no ha podido ser dado de baja porque aun no se entregan todos los analisis de este tipo\n" ANSI_COLOR_RESET);
+        else{//SI ENTRA AL ELSE QUIERE DECIR QUE QUE SI EXISTE
+            char sql[600];
+            sprintf(sql, "select f_baja_analisis(%d);",num_a);
+            int saber_si_se_borro = consulta_rapida_enteros(sql);
+            if(saber_si_se_borro == 1){
+                printf(ANSI_COLOR_GREEN "El analisis ha sido dado de baja correctamente\n" ANSI_COLOR_RESET);
+            }
+            else{//SI ENTRA AL ELSE QUIERE DECIR QUE NO SE PUEDE BORRAR PORQUE NO TODOS HAN SIDO ENTREGADOS AUN
+                printf(ANSI_COLOR_RED "El analisis no ha podido ser dado de baja porque aun no se entregan todos los analisis de este tipo\n" ANSI_COLOR_RESET);
+            }
         }
+
     }
     printf("---------------------------------------------------\n\n\n");
 
@@ -2912,6 +2932,30 @@ void alta_materiales()
 void baja_materiales()
 {
     printf("|-----------------BAJA  MATERIALES-----------------|\n");
+    int n_materiales = consulta_rapida_enteros("select count(codi_barra_m) from materiales where estado_m = true;");
+    if(n_materiales == 0){
+        printf(ANSI_COLOR_RED "No hay materiales para dar de baja\n" ANSI_COLOR_RESET);
+    }
+    else{
+        int codi_barra_m = pedir_entero("CODIGO DE BARRAS DEL MATERIAL A ELIMINAR");
+        codi_barra_m = ver_si_algo_existe(1, codi_barra_m);
+        system("clear");
+        if(codi_barra_m == -1){
+            printf(ANSI_COLOR_RED"El material especificado no existe\n"ANSI_COLOR_RESET);
+        }
+        else{
+            char sql[600];
+            sprintf(sql, "select f_baja_materiales(%d);",codi_barra_m);
+            int eliminar = consulta_rapida_enteros(sql);
+
+            if(eliminar == 0){
+                printf(ANSI_COLOR_RED "El material no puede ser eliminado debido a que se utiliza en algun analisis disponible\n" ANSI_COLOR_RESET);
+            }
+            else{
+                printf(ANSI_COLOR_GREEN "El material ha sido eliminado correctamente\n" ANSI_COLOR_RESET);
+            }
+        }
+    }
     printf("---------------------------------------------------\n\n\n");
 }
 
@@ -3087,6 +3131,32 @@ void alta_reactivos()
 void baja_reactivos()
 {
     printf("|------------------BAJA REACTIVOS------------------|\n");
+    int n_reactivos = consulta_rapida_enteros("select count(codi_barra_r) from reactivos where estado_r = true;");
+
+    if(n_reactivos == 0){
+        printf(ANSI_COLOR_RED "No hay reactivos para dar de baja\n" ANSI_COLOR_RESET);
+    }
+    else{
+        int codi_barra_r = pedir_entero("CODIGO DE BARRA DEL REACTIVO A ELIMINAR");
+        codi_barra_r = ver_si_algo_existe(3, codi_barra_r);
+        system("clear");
+        if(codi_barra_r == -1){
+            printf(ANSI_COLOR_RED "El reactivo especificado no existe\n" ANSI_COLOR_RESET);
+        }
+        else{
+            char sql[600];
+            sprintf(sql,"select f_baja_reactivos(%d);",codi_barra_r);
+            int eliminar = consulta_rapida_enteros(sql);
+            if(eliminar == 0){
+                printf(ANSI_COLOR_RED "El reactivo no puede ser dado de baja debido a que es utilizado en algun atributo disponible\n" ANSI_COLOR_RESET);
+            }
+            else{
+                printf(ANSI_COLOR_GREEN "El reactivo ha sido eliminado correctamente\n" ANSI_COLOR_RESET);
+            }       
+
+        }
+
+    }
     printf("---------------------------------------------------\n\n\n");
 }
 char *menu_reportes()
