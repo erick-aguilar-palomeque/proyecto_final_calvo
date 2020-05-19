@@ -12,3 +12,15 @@ create view v_buscar_pacientes as (select folio_p, nom_p, sexo_p, edad_p, correo
 
 --VISTA QUE MUESTRA LOS DATOS DEL laboratoristas
 create view v_buscar_laboratoristas as (select cedula_lab, nom_lab, sexo_lab, correo, fecha_contratacion from laboratoristas where estado_lab = true);
+
+--VISTA QUE MUESTRA LA EDAD DE LOS PACIENTES
+create view v_edad_pacientes as (select folio_p, nom_p, edad_p from pacientes);
+
+--VISTA QUE MUESTRA LOS PACIENTES Y SU NUMERO DE ANALISIS SOLICITADOS
+create view v_pacientes_con_n_analisis as (select pac.folio_p, pac.nom_p, count(his.folio_p) from pacientes pac inner join historial_clinico his on (pac.folio_p=his.folio_p) group by pac.folio_p);
+
+--VISTA QUE MUESTRA LOS DATOS DEL LABORATORISTAS Y EL NUMERO DE ANALISIS QUE HA LLEVADO A v_catalogo_atributos
+create view v_labs_n_analisis as (select lab.cedula_lab, lab.nom_lab, count(his.folio_p) from laboratoristas lab inner join historial_clinico his on (lab.cedula_lab=his.cedula_lab) group by lab.cedula_lab);
+
+--VISTA QUE MUESTRA LOS DATOS DEL ANALISIS Y EL NUMERO DE ANALISIS SOLICITADOS
+create view v_analisis_n as (select a.num_a, a.nom_a, count(his.num_a) from analisis a inner join historial_clinico his on (a.num_a=his.num_a) group by a.num_a);

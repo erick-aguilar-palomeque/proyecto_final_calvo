@@ -43,3 +43,7 @@ grant select on v_catalogo_analisis to administradores;
 grant select on v_catalogo_atributos to administradores;
 grant select on v_buscar_pacientes to administradores;
 grant select on v_buscar_laboratoristas to administradores;
+grant select on v_edad_pacientes to administradores;
+grant select on v_pacientes_con_n_analisis to administradores;
+grant select on v_labs_n_analisis to administradores;
+grant select on v_analisis_n to administradores;

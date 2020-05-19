@@ -75,7 +75,13 @@ char *menu_reactivos();
 void alta_reactivos();
 void baja_reactivos();
 
+
 char *menu_reportes();
+void pacientes_max_min_edad();
+void n_analisis_por_paciente();
+void n_analisis_por_laboratorista();
+void n_analisis_por_catalogo();
+
 PGconn *conn, *conn2, *conn3, *conn4, *conn5, *conn6;
 PGresult *res, *res2;
 PGresult *resultado;
@@ -263,7 +269,36 @@ int main(int argc, char *argv[])
 
         case 6:
             system("clear");
-            menu_reportes();
+            do
+            {
+                opc_reportes = pedir_menu(7);
+                switch (opc_reportes)
+                {
+                case 1:
+                    system("clear");
+                    pacientes_max_min_edad();
+                    break;
+                case 2:
+                    system("clear");
+                    n_analisis_por_paciente();
+                    break;
+                case 3:
+                    system("clear");
+                    n_analisis_por_laboratorista();
+                    break;
+                case 4:
+                    system("clear");
+                    n_analisis_por_catalogo();
+                    break;
+                case 5:
+                    system("clear");
+                    break;
+                default:
+                    system("clear");
+                    printf(ANSI_COLOR_RED "Opcion no valida, intente de nuevo\n\n" ANSI_COLOR_RESET);
+                    break;
+                }
+            } while (opc_reportes != 5);
             break;
 
         case 7:
@@ -3301,12 +3336,177 @@ void baja_reactivos()
 }
 char *menu_reportes()
 {
-    system("clear");
+    char *opc = malloc(tamano_maloc);
     printf("|-----------------MENU REPORTES------------------|\n");
-    imprimir_resultados(11);
-    printf("---------------------------------------------------\n\n\n");
-    return "0";
+    printf("\n[1] PACIENTES CON MAYOR Y MENOR EDAD");
+    printf("\n[2] NUMERO DE ANALISIS REALIZADOS POR PACIENTE");
+    printf("\n[3] NUMERO DE ANALISIS REALIZADOS POR LABORATORISTA");
+    printf("\n[4] ANALISIS MAS Y MENOS REALIZADOS");
+    printf("\n[5] VOLVER AL MENU PRINCIPAL");
+    printf("\n---------------------------------------------------\n");
+    printf("Ingrese la opcion deseada : ");
+    scanf("%s", opc);
+    return opc;
 }
+void pacientes_max_min_edad(){
+    printf("|--------PACIENTES CON MAS  Y MENOR EDAD---------|\n");
+    int n_pacientes = consulta_rapida_enteros("select count(folio_p) from pacientes;");
+    if(n_pacientes == 0){
+        printf(ANSI_COLOR_RED "No hay pacientes\n" ANSI_COLOR_RESET);
+    }
+    else if(n_pacientes == 1){
+        printf(ANSI_COLOR_BLUE "Solo hay un paciente disponible : \n\n" ANSI_COLOR_RESET);
+        //IMPRIMIR DATOS DEL PACIENTE
+        char sql[600];
+        sprintf(sql, "select * from v_edad_pacientes;");
+        conn3 = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
+
+        if(PQstatus(conn3) != CONNECTION_BAD){
+            res = PQexec(conn, sql);
+            printf(ANSI_COLOR_BLUE "    - > FOLIO PACIENTE : " ANSI_COLOR_RESET); printf("%s\n\n", PQgetvalue(res, 0, 0));
+            printf(ANSI_COLOR_BLUE "    - > NOMBRE PACIENTE : " ANSI_COLOR_RESET); printf("%s\n\n", PQgetvalue(res, 0, 1));
+            printf(ANSI_COLOR_BLUE "    - > EDAD PACIENTE : " ANSI_COLOR_RESET); printf("%s\n\n", PQgetvalue(res, 0, 2));
+            PQclear(res);
+        }
+        PQfinish(conn3);
+
+    }
+    else{
+        char sql[600];
+        int edad_max = consulta_rapida_enteros("select max(edad_p) from pacientes;");
+        sprintf(sql, "select count(folio_p) from pacientes where edad_p = %d;",edad_max);
+        int n_pacientes_max_edad = consulta_rapida_enteros(sql);
+
+        int edad_min = consulta_rapida_enteros("select min(edad_p) from pacientes;");
+        sprintf(sql, "select count(folio_p) from pacientes where edad_p = %d;",edad_min);
+        int n_pacientes_min_edad = consulta_rapida_enteros(sql);
+
+        system("clear");
+        puts("-----------------------------------------------------");
+        printf("\tPACIENTE CON MENOR EDAD\n");   
+        puts("-----------------------------------------------------");
+        if(n_pacientes_min_edad == 1){
+            sprintf(sql, "select * from v_edad_pacientes where edad_p = %d;", edad_min);
+            conn3 = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
+
+            if(PQstatus(conn3) != CONNECTION_BAD){
+                res = PQexec(conn, sql);
+                printf(ANSI_COLOR_BLUE "    - > FOLIO PACIENTE : " ANSI_COLOR_RESET); printf("%s\n\n", PQgetvalue(res, 0, 0));
+                printf(ANSI_COLOR_BLUE "    - > NOMBRE PACIENTE : " ANSI_COLOR_RESET); printf("%s\n\n", PQgetvalue(res, 0, 1));
+                printf(ANSI_COLOR_BLUE "    - > EDAD PACIENTE : " ANSI_COLOR_RESET); printf("%s\n\n", PQgetvalue(res, 0, 2));
+                PQclear(res);
+            }
+            PQfinish(conn3);
+
+        }else{
+            printf(ANSI_COLOR_BLUE "    - > Edad minima : " ANSI_COLOR_RESET);printf("%d\n\n",edad_min);
+            printf(ANSI_COLOR_BLUE "    - > Numero de pacientes con %d años : " ANSI_COLOR_RESET, edad_min);printf("%d\n",n_pacientes_min_edad);
+        }
+        printf("---------------------------------------------------\n");
+        printf("\tPACIENTE CON MAYOR EDAD\n");   
+        puts("-----------------------------------------------------");
+        if(n_pacientes_max_edad == 1){
+            sprintf(sql, "select * from v_edad_pacientes where edad_p = %d;", edad_max);
+            conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
+
+            if(PQstatus(conn) != CONNECTION_BAD){
+                res = PQexec(conn, sql);
+                printf(ANSI_COLOR_BLUE "    - > FOLIO PACIENTE : " ANSI_COLOR_RESET); printf("%s\n\n", PQgetvalue(res, 0, 0));
+                printf(ANSI_COLOR_BLUE "    - > NOMBRE PACIENTE : " ANSI_COLOR_RESET); printf("%s\n\n", PQgetvalue(res, 0, 1));
+                printf(ANSI_COLOR_BLUE "    - > EDAD PACIENTE : " ANSI_COLOR_RESET); printf("%s\n\n", PQgetvalue(res, 0, 2));
+                PQclear(res);
+            }
+            PQfinish(conn);
+
+        }else{
+            printf(ANSI_COLOR_BLUE "    - > Edad maxima : " ANSI_COLOR_RESET);printf("%d\n\n",edad_max);
+            printf(ANSI_COLOR_BLUE "    - > Numero de pacientes con %d años : " ANSI_COLOR_RESET, edad_max);printf("%d\n",n_pacientes_max_edad);
+        }
+
+        
+
+    }
+    printf("---------------------------------------------------\n\n\n");
+}
+void n_analisis_por_paciente(){
+    puts("----------------------------------------------------------------------------------------------------------");
+    printf("\tNUMERO DE ANALISIS SOLICITADOS POR PACIENTES (SE OMITIERON LOS QUE NO TIENEN ANALISIS SOLICITADOS)\n");   
+    puts("----------------------------------------------------------------------------------------------------------");
+    int n_pacientes = consulta_rapida_enteros("select count(folio_p) from pacientes;");
+    if(n_pacientes == 0){
+        printf(ANSI_COLOR_RED "No hay pacientes disponibles\n" ANSI_COLOR_RESET);
+    }
+    else{
+        char sql[600];
+        conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
+
+        if(PQstatus(conn) != CONNECTION_BAD){
+            res = PQexec(conn, "select * from v_pacientes_con_n_analisis;");
+            printf(ANSI_COLOR_BLUE "FOLIO PACIENTE\t\tNOMBRE PACIENTE\t\t    NUMERO DE ANALISIS SOLICITADOS\n" ANSI_COLOR_RESET);
+            for (int i = 0; i < PQntuples(res); i++)
+            {
+                printf("\t%s\t\t%s\t\t%s\n",PQgetvalue(res, i, 0), PQgetvalue(res, i, 1), PQgetvalue(res, i, 2));
+            }
+            PQclear(res);
+        }
+        PQfinish(conn);
+
+    }
+    printf("--------------------------------------------------------------------------------------------------------\n\n\n");
+}
+void n_analisis_por_laboratorista(){
+    puts("----------------------------------------------------------------------------------------------------------");
+    printf("\tNUMERO DE ANALISIS SOLICITADOS POR LABORATORISTA (SE OMITIERON LOS QUE NO HAN HECHO ANALISIS)\n");   
+    puts("----------------------------------------------------------------------------------------------------------");
+    int n_pacientes = consulta_rapida_enteros("select count(cedula_lab) from laboratoristas;");
+    if(n_pacientes == 0){
+        printf(ANSI_COLOR_RED "No hay laboratoristas disponibles\n" ANSI_COLOR_RESET);
+    }
+    else{
+        char sql[600];
+        conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
+
+        if(PQstatus(conn) != CONNECTION_BAD){
+            res = PQexec(conn, "select * from v_labs_n_analisis;");
+            printf(ANSI_COLOR_BLUE "CEDULA LABORATORISTA\t\tNOMBRE LABORATORISTA\t\t\tNUMERO DE ANALISIS REALIZADOS\n" ANSI_COLOR_RESET);
+            for (int i = 0; i < PQntuples(res); i++)
+            {
+                printf("\t%s\t\t\t%s\t\t\t\t%s\n",PQgetvalue(res, i, 0), PQgetvalue(res, i, 1), PQgetvalue(res, i, 2));
+            }
+            PQclear(res);
+        }
+        PQfinish(conn);
+
+    }
+    printf("--------------------------------------------------------------------------------------------------------\n\n\n");
+}
+void n_analisis_por_catalogo(){
+    puts("----------------------------------------------------------------------------------------------------------");
+    printf("NUMERO DE ANALISIS REALIZADOS POR CADA ANALISIS (SE OMITIERON LOS ANALISIS DE LOS QUE NO SE HA SOLICITADO UNO)\n");   
+    puts("----------------------------------------------------------------------------------------------------------");
+    int n_pacientes = consulta_rapida_enteros("select count(num_a) from analisis;");
+    if(n_pacientes == 0){
+        printf(ANSI_COLOR_RED "No hay analisis disponibles\n" ANSI_COLOR_RESET);
+    }
+    else{
+        char sql[600];
+        conn = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
+
+        if(PQstatus(conn) != CONNECTION_BAD){
+            res = PQexec(conn, "select * from v_analisis_n;");
+            printf(ANSI_COLOR_BLUE "NUMERO ANALISIS\t\tNOMBRE ANALISIS\t\t    NUMERO DE ANALISIS SOLICITADOS\n" ANSI_COLOR_RESET);
+            for (int i = 0; i < PQntuples(res); i++)
+            {
+                printf("\t%s\t\t\t%s\t\t\t\t%s\n",PQgetvalue(res, i, 0), PQgetvalue(res, i, 1), PQgetvalue(res, i, 2));
+            }
+            PQclear(res);
+        }
+        PQfinish(conn);
+
+    }
+    printf("--------------------------------------------------------------------------------------------------------\n\n\n");
+}
+
 void hacer_select()
 {
     /*PGconn *conn;
