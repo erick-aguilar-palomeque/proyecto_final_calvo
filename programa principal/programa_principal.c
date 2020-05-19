@@ -13,6 +13,7 @@ int consulta_rapida_enteros();
 char *consulta_rapida_cadenas();
 void insertar();
 void imprimir_resultados();
+void inserto_paciente();
 
 void hacer_select();
 
@@ -728,6 +729,9 @@ char *menu_pacientes()
     scanf("%s", opc);
     return opc;
 }
+
+void inserto_paciente(){
+}
 void alta_pacientes()
 {
     char sql[600];
@@ -829,20 +833,20 @@ void alta_pacientes()
             printf("---------------------------------------------------\n");
             printf("\tDATOS RECOPILADOS\n");
             printf("---------------------------------------------------\n");
-            printf("     - > CORREO: %s\n", paciente[0].correo);
-            printf("     - > NOMBRE: %s\n", paciente[0].nombre1);
+            printf(ANSI_COLOR_BLUE "     - > CORREO: " ANSI_COLOR_RESET);printf("%s\n\n", paciente[0].correo);
+            printf(ANSI_COLOR_BLUE "     - > NOMBRE: " ANSI_COLOR_RESET);printf("%s\n\n", paciente[0].nombre1);
             if ((strcmp(paciente[0].nombre2, "null") == 0))
             { //SI NO TIENE SEGUNDO NOMBRE
                 //NO IMPRIMIMOS SEGUNDO NOMBRE
             }
             else
             {
-                printf("     - > SEGUNDO NOMBRE: %s\n", paciente[0].nombre2);
+                printf(ANSI_COLOR_BLUE "     - > SEGUNDO NOMBRE: " ANSI_COLOR_RESET);printf("%s\n\n", paciente[0].nombre2);
             }
-            printf("     - > PRIMER APELLIDO: %s\n", paciente[0].apellido1);
-            printf("     - > SEGUNDO APELLIDO: %s\n", paciente[0].apellido2);
-            printf("     - > EDAD: %d\n", paciente[0].edad);
-            printf("     - > SEXO: %s\n", paciente[0].sexo_p);
+            printf(ANSI_COLOR_BLUE "     - > PRIMER APELLIDO: " ANSI_COLOR_RESET);printf("%s\n\n", paciente[0].apellido1);
+            printf(ANSI_COLOR_BLUE "     - > SEGUNDO APELLIDO: " ANSI_COLOR_RESET);printf("%s\n\n", paciente[0].apellido2);
+            printf(ANSI_COLOR_BLUE "     - > EDAD: " ANSI_COLOR_RESET);printf("%d\n\n", paciente[0].edad);
+            printf(ANSI_COLOR_BLUE "     - > SEXO: " ANSI_COLOR_RESET);printf("%s\n\n", paciente[0].sexo_p);
             printf("---------------------------------------------------");
 
             opc_confirmacion = pedir_dos_opciones("CONFIRMAR REGISTRO");
@@ -861,14 +865,25 @@ void alta_pacientes()
                     //SI TIENE SEGUNDO NOMBRE
                     sprintf(sql, "insert into pacientes (nom_p, edad_p, sexo_p, correo) values(UPPER('%s %s %s %s'), %d, UPPER('%s'), UPPER('%s'));", paciente[0].nombre1, paciente[0].nombre2, paciente[0].apellido1, paciente[0].apellido2, paciente[0].edad, paciente[0].sexo_p, paciente[0].correo);
                 }
-
-                conn3 = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1"); //ABRO CONEXION 3
-                if (PQstatus(conn3) != CONNECTION_BAD)
+                
+                conn6 = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1"); //ABRO CONEXION 6
+                if (PQstatus(conn6) != CONNECTION_BAD)
                 {
-                    res = PQexec(conn3, sql);
+                    res = PQexec(conn6, sql);
                     if (PQresultStatus(res) == PGRES_COMMAND_OK)
                     {
-                        printf(ANSI_COLOR_GREEN "Se ha registrado el paciente de manera exitosa\n" ANSI_COLOR_RESET);
+                        conn3 = PQsetdbLogin("localhost", "5432", NULL, NULL, "lac", "usuario1", "usuario1");
+                        int ultimo_paciente = -1;
+                        if (PQstatus(conn3) != CONNECTION_BAD)
+                        {
+                            res = PQexec(conn3, "select max(folio_p) from pacientes;");
+                            ultimo_paciente = atoi(PQgetvalue(res, 0, 0)); //OBTIENE LO QUE DEVUELVA LA CADENA
+                            PQclear(res);
+                        }
+
+                        PQfinish(conn3);
+                        printf(ANSI_COLOR_GREEN "Se ha registrado el paciente de manera exitosa, folio : %d\n" ANSI_COLOR_RESET, ultimo_paciente);
+                        
                     }
                     else
                     {
@@ -879,7 +894,7 @@ void alta_pacientes()
                 {
                     printf("No conecto esta mierda\n");
                 }
-                PQfinish(conn3); //CIERRO CONEXION 3
+                PQfinish(conn6); //CIERRO CONEXION 6
             }
             else
             {
@@ -3059,7 +3074,7 @@ int consulta_rapida_enteros(char sql[600])
         res = PQexec(conn, sql);
         devolver = atoi(PQgetvalue(res, 0, 0)); //OBTIENE LO QUE DEVUELVA LA CADENA
         //puts("despues");
-        //PQclear(res);
+        PQclear(res);
     }
     //printf("devolver: %d\n",devolver);
 
