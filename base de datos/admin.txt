@@ -41,3 +41,5 @@ grant usage on inventario_reactivos_num_inv_r_seq to administradores;
 grant select on v_buscar_analisis to administradores;
 grant select on v_catalogo_analisis to administradores;
 grant select on v_catalogo_atributos to administradores;
+grant select on v_buscar_pacientes to administradores;
+grant select on v_buscar_laboratoristas to administradores;
