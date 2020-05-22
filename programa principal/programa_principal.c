@@ -534,7 +534,7 @@ char *validar_fecha(char cadena[tamano_maloc])
     if (strlen(cadena) == 10)
     { //LA CADENA TIENE 10 CARACTERES A FUERZA 01/12/2020
         for (int i = 0; i < strlen(cadena); i++)
-        {
+        {//01/10/2020
             if (i == 2 || i == 5)
             { //SIGNIFICA QUE AHI DEBEN HABER DIAGONALES
                 if (cadena[i] == '/')
@@ -924,7 +924,7 @@ void alta_pacientes()
                 }
                 else
                 {
-                    printf("No conecto esta mierda\n");
+                    printf("La conexion no fue posible\n");
                 }
                 PQfinish(conn6); //CIERRO CONEXION 6
             }
@@ -1092,7 +1092,7 @@ void imprimir_pacientes(char sql[600])
     }
     else
     {
-        printf("No conecto esta mierda\n");
+        printf("La conexion no fue posible\n");
     }
 
     PQfinish(conn); //FINALIZAMOS LA CONEXION
@@ -1299,7 +1299,7 @@ void buscar_laboratoristas()
         switch (opc_busqueda)
         {
         case 1:
-            printf("\nINGRESE UN VALOR PARA EL CAMPO [CEDULA] : "); //PEDIMOS CORREO
+            printf("\nINGRESE UN VALOR PARA EL CAMPO [CEDULA] : "); //PEDIMOS CEDULA
             scanf("%s", laboratorista[0].cedula);
             //GENERAMOS LA CONSULTA
             sprintf(sql, "select * from v_buscar_laboratoristas where cedula_lab ~* '^%s$';", laboratorista[0].cedula); //comparar cadenas usar expresion regular
@@ -3341,7 +3341,7 @@ char *menu_reportes()
     printf("\n[1] PACIENTES CON MAYOR Y MENOR EDAD");
     printf("\n[2] NUMERO DE ANALISIS REALIZADOS POR PACIENTE");
     printf("\n[3] NUMERO DE ANALISIS REALIZADOS POR LABORATORISTA");
-    printf("\n[4] ANALISIS MAS Y MENOS REALIZADOS");
+    printf("\n[4] NUMERO DE ANALISIS SOLICITADOS POR CADA ESTUDIO");
     printf("\n[5] VOLVER AL MENU PRINCIPAL");
     printf("\n---------------------------------------------------\n");
     printf("Ingrese la opcion deseada : ");

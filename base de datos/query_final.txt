@@ -1,0 +1,151 @@
+
+CREATE TABLE Pacientes(
+	folio_p serial PRIMARY KEY,
+	nom_p text NOT NULL,
+	edad_p int NOT NULL,
+	sexo_p text check(sexo_p ~* '(femenino|masculino)') NOT NULL,
+	fecha_registro date DEFAULT now() NOT NULL,
+	correo text check(correo ~ '^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$') UNIQUE,
+	estado_p boolean DEFAULT true NOT NULL	
+);
+
+CREATE TABLE Laboratoristas(
+	cedula_lab text check(cedula_lab ~* '[A-Za-z0-9]+') PRIMARY KEY,
+	nom_lab text NOT NULL,
+	fecha_nac_lab date NOT NULL,
+	sexo_lab text check(sexo_lab ~* '(femenino|masculino)') NOT NULL,
+	correo text check(correo ~ '^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$') UNIQUE,
+	fecha_contratacion date DEFAULT now() NOT NULL,	
+	estado_lab boolean DEFAULT true NOT NULL
+);
+
+
+CREATE TABLE Analisis(
+	num_a serial PRIMARY KEY,
+	nom_a text NOT NULL,
+	tiempo_realizacion int NOT NULL,
+	estado_a boolean DEFAULT true NOT NULL
+);
+
+CREATE TABLE Historial_clinico(
+	folio_a serial PRIMARY KEY,
+	folio_p int REFERENCES Pacientes(folio_p) NOT NULL,
+	num_a int REFERENCES Analisis(num_a) NOT NULL,
+	status int DEFAULT 1 NOT NULL,
+	fecha_solicitud date DEFAULT now() NOT NULL,
+	fecha_realizacion date,
+	fecha_entrega date,
+	cedula_lab text REFERENCES Laboratoristas(cedula_lab) NOT NULL	 
+);
+
+
+CREATE TABLE Materiales(
+	codi_barra_m serial PRIMARY KEY,
+	nom_m text NOT NULL,
+	stock_max_m int NOT NULL,
+	stock_min_m int NOT NULL,
+	stock_actual_m int NOT NULL,
+	estado_m boolean DEFAULT true NOT NULL
+);
+
+CREATE TABLE Atributos(
+	num_atri serial PRIMARY KEY,
+	nom_atri text NOT NULL,
+	descrip_atri text NOT NULL,
+	min float NOT NULL,
+	max float NOT NULL,
+	estado_atri boolean DEFAULT true NOT NULL
+);
+
+CREATE TABLE Unidad_medida(
+	num_unidad serial PRIMARY KEY,
+	nom_unidad text NOT NULL
+);
+
+CREATE TABLE Reactivos(
+	codi_barra_r serial PRIMARY KEY,
+	nom_r text NOT NULL,
+	num_unidad int REFERENCES Unidad_medida(num_unidad) NOT NULL,
+	stock_max_r float NOT NULL,
+	stock_min_r float NOT NULL,
+	stock_actual_r float NOT NULL,
+	estado_r boolean DEFAULT true NOT NULL
+);
+
+CREATE TABLE Inventario_materiales(
+	num_inv_m serial PRIMARY KEY,	
+	fecha_inv_m date DEFAULT now() NOT NULL,
+	codi_barra_m int REFERENCES Materiales(codi_barra_m) NOT NULL,
+	stock_anterior_m int NOT NULL,
+	stock_despues_m int NOT NULL,
+	cant_ocupada_m int NOT NULL,
+	folio_a int REFERENCES Historial_clinico(
+	folio_a) NOT NULL
+);
+
+CREATE TABLE Inventario_reactivos(
+	num_inv_r serial PRIMARY KEY,	
+	fecha_inv_r date DEFAULT now() NOT NULL,
+	codi_barra_r int REFERENCES Reactivos(codi_barra_r) NOT NULL,
+	stock_anterior_r float NOT NULL,
+	cant_ocupada_r float NOT NULL,
+	stock_despues_r float NOT NULL,
+	folio_a int REFERENCES Historial_clinico(folio_a) NOT NULL
+);
+
+CREATE TABLE Det_a_materiales(
+	num_a int REFERENCES Analisis(num_a) NOT NULL,
+	cons_det_a_materiales int NOT NULL,
+	codi_barra_m int REFERENCES Materiales(codi_barra_m) NOT NULL,
+	PRIMARY KEY(num_a,cons_det_a_materiales),
+	cant_ocupada_m int NOT NULL
+);
+
+CREATE TABLE Det_a_atributos(
+	num_a int REFERENCES Analisis(num_a) NOT NULL,
+	cons_det_a_atributos int NOT NULL,
+	num_atri int REFERENCES Atributos(num_atri) NOT NULL,
+	PRIMARY KEY(num_a, cons_det_a_atributos)
+);
+
+CREATE TABLE Det_atributos(
+	num_atri int REFERENCES Atributos(num_atri) NOT NULL,
+	cons_det_atributos int NOT NULL,
+	codi_barra_r int REFERENCES Reactivos(codi_barra_r) NOT NULL,
+	PRIMARY KEY(num_atri, cons_det_atributos),
+	cant_ocupada_r float NOT NULL
+);
+
+CREATE TABLE Resultados(
+	folio_a int REFERENCES Historial_clinico(folio_a) NOT NULL,
+	cons_resultados int NOT NULL,
+	resultado float NOT NULL,
+	num_a int NOT NULL,
+	cons_det_a_atributos int NOT NULL,
+	FOREIGN KEY(num_a, cons_det_a_atributos) REFERENCES 
+	Det_a_atributos(num_a, cons_det_a_atributos),
+	num_atri int REFERENCES Atributos(num_atri) NOT NULL,
+	PRIMARY KEY(folio_a, cons_resultados)	
+);
+
+insert into unidad_medida(nom_unidad) values('Kg');
+insert into unidad_medida(nom_unidad) values('Gr');
+insert into unidad_medida(nom_unidad) values('Lt');
+insert into unidad_medida(nom_unidad) values('Ml');
+
+
+--DROP TABLES
+drop table resultados;
+drop table Det_atributos;
+drop table Det_a_atributos;
+drop table Det_a_materiales;
+drop table Inventario_reactivos;
+drop table Inventario_materiales;
+drop table Reactivos;
+drop table unidad_medida;
+drop table atributos;
+drop table Materiales;
+drop table historial_clinico;
+drop table analisis;
+drop table laboratoristas;
+drop table pacientes;

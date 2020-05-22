@@ -2,7 +2,7 @@
 create or replace function ver_si_hay_recursos_para_analisis(fnum_a int)
 returns int
 as 
-$$
+$$ 
 
 declare
     material record;
@@ -250,7 +250,7 @@ for each row
 execute procedure f_insertar_fechas_historial(); 
 
 
---PL QUE RETORNA 1 SI SE PUEDE DAR DE BAJA UN LABORATORISTA Y 0 SI NO SE PUEDE, SE PUEDE SIEMPRE Y CUANDO EL LABORATORISTA YA ESTE INVOLUCRADO EN UN ANALISIS SOLICITADO
+--PL QUE RETORNA 1 SI SE PUEDE DAR DE BAJA UN LABORATORISTA Y 0 SI NO SE PUEDE, SE PUEDE SIEMPRE Y CUANDO EL LABORATORISTA NO ESTE INVOLUCRADO EN UN ANALISIS SOLICITADO
 
 create or replace function f_baja_laboratoristas(fcedula_lab text)
 returns int
